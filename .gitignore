@@ -7,3 +7,4 @@ tsne/
 .idea/
 __pycache__/
 *.pyc
+*.json

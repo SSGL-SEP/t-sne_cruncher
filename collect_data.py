@@ -7,19 +7,22 @@ from utils import *
 import scipy.io.wavfile as wf
 
 
-def main():
-    files = list(all_files(os.getcwd(), [".wav", ".mp3"]))
+def collect_data(source_folder=os.getcwd(), extensions=None, target_file=None):
+    if extensions is None:
+        extensions = ['.wav', '.mp3']
+    files = list(all_files(source_folder, extensions))
     with Pool() as p:
         results = p.map(load_sample, files)
     print("processed", len(results), "samples")
     valid = filter(None, results)
     names = [x[0] for x in valid]
     samples = [x[1] for x in valid]
-    durations = [x[2] for x in valid]
     samples = np.asarray(samples)
     for i in names:
         print(i)
-    np.save(os.path.join(os.getcwd(), "samples.npy"), samples)
+    if target_file:
+        np.save(target_file, samples)
+    return results
 
 
 def load_sample(fn):
@@ -29,4 +32,4 @@ def load_sample(fn):
 
 
 if __name__ == "__main__":
-    main()
+    collect_data(target_file=os.path.join(os.getcwd(), 'samples.npy'))

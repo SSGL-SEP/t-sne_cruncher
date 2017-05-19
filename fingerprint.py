@@ -7,15 +7,17 @@ import os
 window = np.hanning(1024)
 
 
-def main():
-    samples = np.load(os.path.join(os.getcwd(), 'samples.npy'))
+def fingerprint_from_file_data(source_npy=(os.path.join(os.getcwd(), 'samples.npy')), target_npy_file=None):
+    samples = np.load(source_npy)
     with Pool() as p:
-        fingerprints = p.map(job, samples)
+        fingerprints = p.map(fingerprint_form_data, samples)
     fingerprints = np.asarray(fingerprints).astype(np.float32)
-    np.save(os.path.join(os.getcwd(), 'fingerprints.npy'), fingerprints)
+    if target_npy_file:
+        np.save(target_npy_file, fingerprints)
+    return fingerprints
 
 
-def job(y):
+def fingerprint_form_data(y):
     s = librosa.stft(y, 1024, 4096, window=window)
     amp = np.abs(s)
     amp = block_reduce(amp, (10, 1), func=np.mean)
@@ -29,4 +31,4 @@ def job(y):
     return amp
 
 if __name__ == "__main__":
-    main()
+    fingerprint_from_file_data(target_npy_file=os.path.join(os.getcwd(), 'fingerprints.npy'))
