@@ -1,0 +1,9 @@
+plot/
+tsne/
+*.swp
+*.npy
+*.wav
+*.swo
+.idea/
+__pycache__/
+
