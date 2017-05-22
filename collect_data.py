@@ -18,8 +18,6 @@ def collect_data(source_folder=os.getcwd(), extensions=None, target_file=None):
     names = [x[0] for x in valid]
     samples = [x[1] for x in valid]
     samples = np.asarray(samples)
-    for i in names:
-        print(i)
     if target_file:
         np.save(target_file, samples)
     return results
@@ -27,7 +25,11 @@ def collect_data(source_folder=os.getcwd(), extensions=None, target_file=None):
 
 def load_sample(fn):
     audio = wf.read(fn)[1]
-    audio.resize(22050)
+    if len(audio.shape) > 1:
+        audio = [x[0] for x in audio]
+    if len(audio) > 16000:
+        audio = np.resize(audio, 16000)
+    print(fn, " loaded.")
     return fn, audio, len(audio)
 
 

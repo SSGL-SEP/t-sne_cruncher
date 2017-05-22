@@ -8,3 +8,7 @@ tsne/
 __pycache__/
 *.pyc
 *.json
+*.csv
+*.png
+*.tgz
+columns.txt
