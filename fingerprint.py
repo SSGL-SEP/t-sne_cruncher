@@ -1,13 +1,24 @@
+import os
 from multiprocessing import Pool
-from skimage.measure import block_reduce
 import numpy as np
 import librosa
-import os
+from skimage.measure import block_reduce
 
 window = np.hanning(1024)
 
 
-def fingerprint_from_file_data(source_npy=(os.path.join(os.getcwd(), 'samples.npy')), target_npy_file=None):
+def fingerprint_from_file_data(source_npy: str = (os.path.join(os.getcwd(), 'samples.npy')),
+                               target_npy_file: str = None):
+    """
+    Read data from a specified .npy file and create a fingerprint.
+    
+    :param source_npy: Source .npy file to read from
+    :type source_npy: str
+    :param target_npy_file: Optional .npy target file to write results to 
+    :type target_npy_file: str
+    :return: Three-dimensional numpy array with audio fingerprints.
+    :rtype: numpy.ndarray
+    """
     samples = np.load(source_npy)
     with Pool() as p:
         fingerprints = p.map(fingerprint_form_data, samples)
@@ -17,7 +28,15 @@ def fingerprint_from_file_data(source_npy=(os.path.join(os.getcwd(), 'samples.np
     return fingerprints
 
 
-def fingerprint_form_data(y):
+def fingerprint_form_data(y: np.ndarray):
+    """
+    Create fingerprint data from audio in numpy array.
+    
+    :param y: The numpy array containing audio data
+    :type y: numpy.ndarray
+    :return: Two-dimensional numpy array containing the fingerprint.
+    :rtype: numpy.ndarray
+    """
     s = librosa.stft(y, 1024, 4096, window=window)
     amp = np.abs(s)
     amp = block_reduce(amp, (10, 1), func=np.mean)

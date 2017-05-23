@@ -1,5 +1,7 @@
-__all__ = ["ffmpeg_load_audio", "mkdir_p", "tsne", "normalize", "all_files", "parse_metadata"]
-from utils.ffmpeg_load_audio import ffmpeg_load_audio
+"""
+Provides support functions for the top level modules
+"""
+__all__ = ["mkdir_p", "tsne", "normalize", "all_files", "parse_metadata"]
 from utils.mkdir_p import mkdir_p
 from utils.tsne import tsne
 from utils.normalize import normalize

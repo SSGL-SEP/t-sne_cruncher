@@ -1,16 +1,22 @@
-from utils import *
+import json
+import os
+import time
+from argparse import ArgumentParser
+import numpy as np
 from calculate_tsne import t_sne, plot_t_sne
+from multiprocessing import Pool
 from collect_data import collect_data
 from fingerprint import fingerprint_form_data
-from argparse import ArgumentParser
-from multiprocessing import Pool
-import numpy as np
-import os
-import json
-import time
+from utils import *
 
 
 def _arg_parse():
+    """
+    Provides a command line argument parser object.
+    
+    :return: Argument parser for cruncher.py
+    :rtype: argparse.ArgumentParser
+    """
     arg_parser = ArgumentParser()
     arg_parser.add_argument("-f", "--input_folder", type=str, default=os.getcwd(),
                             help="Folder to read audio files from. Default: current directory.")
@@ -26,19 +32,28 @@ def _arg_parse():
                             help="'.npy' file to output fingerprint data to. Default: None")
     arg_parser.add_argument("-m", "--value_minimum", type=int, default=0,
                             help="Minimum coordinate value to use when scaling. Default: 0")
-    arg_parser.add_argument("-x", "--value_maximum", type=int, default=800,
-                            help="Maximum coordinate value to use when scaling. Default: 800")
+    arg_parser.add_argument("-x", "--value_maximum", type=int, default=600,
+                            help="Maximum coordinate value to use when scaling. Default: 600")
     arg_parser.add_argument("-t", "--plot_output", type=str, default=None,
-                            help="'.png' file to wrote scatter plot to after t-sne crunching. Default: None")
+                            help="'.png' file to write scatter plot to after t-sne crunching. Default: None")
     arg_parser.add_argument("-c", "--collect_metadata", type=str, default=None,
-                            help="'.csv' file to read file metadata from. audio file names should be in first colmun. "
+                            help="'.csv' file to read file metadata from. audio file names should be in first column. "
                                  "Default: None")
+    arg_parser.add_argument("-d", "--max_duration", type=int, default=500,
+                            help="Maximum duration of sound samples (in milliseconds). Longer samples will be "
+                                 "truncated to the given length. Default: 500ms")
     return arg_parser
 
 
 def main(args):
+    """
+    Run analysis and t-SNE reduction based on command line parameters
+
+    :param args: parsed command line argument object
+    :type args: argparse.Namespace
+    """
     t = time.time()
-    data = collect_data(args.input_folder, target_file=args.sample_output)
+    data = collect_data(max_duration=args.max_duration, source_folder=args.input_folder, target_file=args.sample_output)
     with Pool() as p:
         results = p.map(fingerprint_form_data, [x[1] for x in data])
     results = np.asarray(results).astype(np.float32)
@@ -55,6 +70,18 @@ def main(args):
 
 
 def output(file_path, data, x_3d, metadata_location):
+    """
+    Dump json containing calculated 3d projection and posibly metadata.
+    
+    :param file_path: .json file to write results to
+    :type file_path: str
+    :param data: Raw audio data as provided by the collect_data module.
+    :type data: List[Tuple[str, numpy.ndarray, int]]
+    :param x_3d: The numpy array containing the 3d projection.
+    :type x_3d: numpy.ndarray
+    :param metadata_location: .csv file to load metadata from.
+    :type metadata_location: str
+    """
     metadata = {}
     if metadata_location:
         metadata = parse_metadata(metadata_location)
@@ -64,6 +91,18 @@ def output(file_path, data, x_3d, metadata_location):
 
 
 def collect(data, x_3d, metadata):
+    """
+    Create a list of objects to write to json.
+
+    :param data: raw data as provided by the collect_data module
+    :type data: List[Tuple[str, numpy.ndarray, int]]
+    :param x_3d: The numpy array containg the 3d projection
+    :type x_3d: numpy.ndarray
+    :param metadata: Dictionary containing metadata for the files.
+    :type metadata: Dict
+    :return: A list of lists of values to be written to json.
+    :rtype: List[List[Union[int, str, List[Dict{str : str}]]]]
+    """
     lst = []
     for i in range(len(data)):
         fn = data[i][0].split("/")[-1]
