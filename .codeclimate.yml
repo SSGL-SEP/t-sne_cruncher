@@ -1,2 +1,2 @@
 exclude_paths:
-- */tsne.py
+- "utils/tsne.py"
