@@ -2,11 +2,11 @@ import json
 import os
 import time
 from argparse import ArgumentParser
-import numpy as np
-from calculate_tsne import t_sne, plot_t_sne
 from multiprocessing import Pool
-from collect_data import collect_data
-from fingerprint import fingerprint_form_data
+
+import numpy as np
+
+from subprocesses import *
 from utils import *
 
 
@@ -45,6 +45,7 @@ def _arg_parse():
     return arg_parser
 
 
+# noinspection PyTypeChecker
 def main(args):
     """
     Run analysis and t-SNE reduction based on command line parameters

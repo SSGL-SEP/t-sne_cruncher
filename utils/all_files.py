@@ -3,7 +3,7 @@ import os
 
 def all_files(folder_path: str, exts: list):
     """
-    Gathers all files conforming to extensions recursively from given Folder
+    Gathers all files conforming to provided extensions.
      
     :param folder_path: Path to folder
     :type folder_path: str

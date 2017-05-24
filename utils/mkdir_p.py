@@ -12,7 +12,10 @@ def mkdir_p(path: str):
     try:
         os.makedirs(path)
     except OSError as ex:
-        if ex.errno == errno.EEXIST and os.path.isdir(path):
+        v = os.path.isdir(path)
+        w = ex.errno == errno.EEXIST
+        if v and w:
+            return "ex"
             pass
         else:
             raise

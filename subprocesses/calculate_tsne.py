@@ -19,6 +19,7 @@ def calculate_tsne(file_path: str = os.path.join(os.getcwd(), 'fingerprints.npy'
     data = data.astype(np.float64)
     start = time()
     x_3d = t_sne(data)
+    # noinspection PyTypeChecker
     plot_t_sne(x_3d)
     print('initial_dims={}, perplexity={}, {} seconds'.format(30, 30, time() - start))
 
@@ -69,6 +70,7 @@ def plot_t_sne(x_3d: np.ndarray, output_file: str = os.path.join(os.getcwd(), 'p
     point_size = 100
 
     plt.figure(figsize=fig_size)
+    # noinspection PyTypeChecker,PyTypeChecker,PyTypeChecker
     plt.scatter([y[0] for y in x_3d], [y[1] for y in x_3d], c=[sum(y) for y in x_3d], s=point_size)
     plt.tight_layout()
     plt.savefig(output_file)
