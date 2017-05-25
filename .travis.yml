@@ -3,3 +3,4 @@ python:
     - "3.5"
 install: "pip install -r requirements.txt"
 script: "coverage run -m unittest discover"
+after-success: codeclimate-test-reporter
