@@ -4,4 +4,4 @@ scipy
 librosa
 matplotlib
 coveralls
-skimage
+scikit-image
