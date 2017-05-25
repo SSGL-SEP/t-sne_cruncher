@@ -1,0 +1,5 @@
+codeclimate-test-reporter
+numpy
+scipy
+librosa
+matplotlib

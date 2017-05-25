@@ -13,15 +13,19 @@ def parse_metadata(file_path: str):
     """
     d = {}
     h = None
-    with open(file_path, "r") as csvfile:
-        csv_reader = csv.reader(csvfile)
+    with open(file_path, "r") as csv_file:
+        csv_reader = csv.reader(csv_file)
         for row in csv_reader:
             if not h:
                 h = row
             else:
-                if row[0] not in d:
-                    d[row[0]] = []
-                for i in range(len(row)):
-                    if row[i]:
-                        d[row[0]].append({"key": h[i], "val": row[i]})
+                _parse_row(d, h, row)
     return d
+
+
+def _parse_row(d, h, row):
+    if row[0] not in d:
+        d[row[0]] = []
+    for i in range(len(row)):
+        if row[i]:
+            d[row[0]].append({"key": h[i], "val": row[i]})

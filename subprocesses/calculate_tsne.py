@@ -15,7 +15,6 @@ def calculate_tsne(file_path: str = os.path.join(os.getcwd(), 'fingerprints.npy'
     """
     data = np.load(file_path)
     data = data.reshape(len(data), -1)
-    print(data.shape)
     data = data.astype(np.float64)
     start = time()
     x_3d = t_sne(data)
