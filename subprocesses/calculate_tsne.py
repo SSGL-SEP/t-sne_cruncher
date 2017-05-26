@@ -21,6 +21,7 @@ def calculate_tsne(file_path: str = os.path.join(os.getcwd(), 'fingerprints.npy'
     # noinspection PyTypeChecker
     plot_t_sne(x_3d)
     print('initial_dims={}, perplexity={}, {} seconds'.format(30, 30, time() - start))
+    return x_3d
 
 
 def save_tsv(data: np.ndarray, file_name: str):
