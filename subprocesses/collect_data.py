@@ -36,13 +36,13 @@ def collect_data(max_duration: int = 500, source_folder: str = os.getcwd(),
     return results
 
 
-def load_sample(tup: (str, np.ndarray, int)):
+def load_sample(tup: (int, str)):
     """
     Return a (possibly truncated) numpy array with the audio data of the specified .wav file. 
     Note that only the first channel of a multichannel .wav will be read.
     
     :param tup: Tuple containing the maximum length allowed and filepath to the .wav to load.
-    :type tup: (int, numpy.ndarray)
+    :type tup: (int, str)
     :return: Tuple containing the filepath of the loaded .wav, the audio data and the length of the sample
     :rtype: (str, numpy.ndarray, int)
     """
