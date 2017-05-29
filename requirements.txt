@@ -1,7 +1,7 @@
-codeclimate-test-reporter
 numpy
 scipy
 librosa
 matplotlib
-coveralls
 scikit-image
+coverage
+codecov
