@@ -1,5 +1,5 @@
 from unittest import mock, TestCase
-from utils.all_files import all_files
+from utils import all_files
 
 
 class TestAllFiles(TestCase):

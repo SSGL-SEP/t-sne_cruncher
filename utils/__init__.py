@@ -1,9 +1,10 @@
 """
 Provides support functions for the top level modules
 """
-__all__ = ["mkdir_p", "tsne", "normalize", "all_files", "parse_metadata"]
-from utils.mkdir_p import mkdir_p
+__all__ = ["mkdir_p", "tsne", "normalize", "all_files", "parse_metadata", "add_color"]
+from utils.utils import mkdir_p
 from utils.tsne import tsne
-from utils.normalize import normalize
-from utils.all_files import all_files
-from utils.parse_metadata import parse_metadata
+from utils.utils import normalize
+from utils.utils import all_files
+from utils.utils import parse_metadata
+from utils.coloration import add_color

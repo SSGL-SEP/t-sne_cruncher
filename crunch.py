@@ -1,7 +1,6 @@
 import json
 import os
 import time
-import colorsys
 from argparse import ArgumentParser
 from multiprocessing import Pool
 
@@ -74,46 +73,6 @@ def main(args):
     x_3d = normalize(np.asarray(x_3d), args.value_minimum, args.value_maximum)
     output(args.output_file, data, x_3d, args.collect_metadata, args.colorby)
     print("Crunching completed in ", int(time.time() - t), " seconds")
-
-
-def color_by_tag(data_list, color_by):
-    s = {}
-    for e in data_list:
-        for d in e[5]:
-            if d["key"] == color_by:
-                s[d["val"]] = 0
-    li = sorted(list(s.keys()))
-    for i in range(len(li)):
-        s[li[i]] = i
-    for e in data_list:
-        colored = False
-        for d in e[5]:
-            if d["key"] == color_by:
-                rgb = colorsys.hsv_to_rgb(s[d["val"]] / len(li), 1, 255)
-                e.append("#{0:02x}{1:02x}{2:02x}".format(
-                    int(max(0, min(rgb[0], 255))),
-                    int(max(0, min(rgb[1], 255))),
-                    int(max(0, min(rgb[2], 255)))))
-                colored = True
-        if not colored:
-            e.append("#ffffff")
-
-
-def color_by_manhattan(data_list):
-    m = max([e[1] + e[2] + e[3] for e in data_list])
-    for e in data_list:
-        rgb = colorsys.hsv_to_rgb((e[1] + e[2] + e[3])/m, 1, 255)
-        e.append("#{0:02x}{1:02x}{2:02x}".format(
-            max(0, min(rgb[0], 255)),
-            max(0, min(rgb[1], 255)),
-            max(0, min(rgb[2], 255))))
-
-
-def add_color(data_list, color_by):
-    if color_by:
-        color_by_tag(data_list, color_by)
-    else:
-        color_by_manhattan(data_list)
 
 
 def output(file_path, data, x_3d, metadata_location, color_by):

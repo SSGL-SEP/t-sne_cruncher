@@ -1,6 +1,6 @@
 import errno
 from unittest import mock, TestCase
-from utils.mkdir_p import mkdir_p
+from utils import mkdir_p
 
 
 class TestMkdirP(TestCase):
