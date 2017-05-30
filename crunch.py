@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import colorsys
 from argparse import ArgumentParser
 from multiprocessing import Pool
 
@@ -42,6 +43,10 @@ def _arg_parse():
     arg_parser.add_argument("-d", "--max_duration", type=int, default=500,
                             help="Maximum duration of sound samples (in milliseconds). Longer samples will be "
                                  "truncated to the given length. Default: 500ms")
+    arg_parser.add_argument("--td", help="Generates 2d data instead of the default 3d.", action="store_true")
+    arg_parser.add_argument("--colorby", type=str, default=None,
+                            help="Generate sample coloring based on metadata tag. "
+                                 "Default: manhattan distance from origin")
     return arg_parser
 
 
@@ -54,6 +59,7 @@ def main(args):
     :type args: argparse.Namespace
     """
     t = time.time()
+    output_dimensions = 2 if args.td else 3
     data = collect_data(max_duration=args.max_duration, source_folder=args.input_folder, target_file=args.sample_output)
     with Pool() as p:
         results = p.map(fingerprint_form_data, [x[1] for x in data])
@@ -62,18 +68,60 @@ def main(args):
         np.save(args.fingerprint_output, results)
     results = results.astype(np.float64)
     results = results.reshape(len(results), -1)
-    x_3d = t_sne(results, initial_dims=args.initial_dimensions, perplexity=args.perplexity)
+    x_3d = t_sne(results, initial_dims=args.initial_dimensions, perplexity=args.perplexity, no_dims=output_dimensions)
     if args.plot_output:
         plot_t_sne(x_3d, args.plot_output)
     x_3d = normalize(np.asarray(x_3d), args.value_minimum, args.value_maximum)
-    output(args.output_file, data, x_3d, args.collect_metadata)
+    output(args.output_file, data, x_3d, args.collect_metadata, args.colorby)
     print("Crunching completed in ", int(time.time() - t), " seconds")
 
 
-def output(file_path, data, x_3d, metadata_location):
+def color_by_tag(data_list, color_by):
+    s = {}
+    for e in data_list:
+        for d in e[5]:
+            if d["key"] == color_by:
+                s[d["val"]] = 0
+    li = sorted(list(s.keys()))
+    for i in range(len(li)):
+        s[li[i]] = i
+    for e in data_list:
+        colored = False
+        for d in e[5]:
+            if d["key"] == color_by:
+                rgb = colorsys.hsv_to_rgb(s[d["val"]] / len(li), 1, 255)
+                e.append("#{0:02x}{1:02x}{2:02x}".format(
+                    int(max(0, min(rgb[0], 255))),
+                    int(max(0, min(rgb[1], 255))),
+                    int(max(0, min(rgb[2], 255)))))
+                colored = True
+        if not colored:
+            e.append("#ffffff")
+
+
+def color_by_manhattan(data_list):
+    m = max([e[1] + e[2] + e[3] for e in data_list])
+    for e in data_list:
+        rgb = colorsys.hsv_to_rgb((e[1] + e[2] + e[3])/m, 1, 255)
+        e.append("#{0:02x}{1:02x}{2:02x}".format(
+            max(0, min(rgb[0], 255)),
+            max(0, min(rgb[1], 255)),
+            max(0, min(rgb[2], 255))))
+
+
+def add_color(data_list, color_by):
+    if color_by:
+        color_by_tag(data_list, color_by)
+    else:
+        color_by_manhattan(data_list)
+
+
+def output(file_path, data, x_3d, metadata_location, color_by):
     """
-    Dump json containing calculated 3d projection and posibly metadata.
+    Dump json containing calculated 2d or 3d projection and possibly metadata.
     
+    :param color_by: tag to color samples by 
+    :type color_by: Union(str, None)
     :param file_path: .json file to write results to
     :type file_path: str
     :param data: Raw audio data as provided by the collect_data module.
@@ -81,12 +129,13 @@ def output(file_path, data, x_3d, metadata_location):
     :param x_3d: The numpy array containing the 3d projection.
     :type x_3d: numpy.ndarray
     :param metadata_location: .csv file to load metadata from.
-    :type metadata_location: str
+    :type metadata_location: Union(str, None)
     """
     metadata = {}
     if metadata_location:
         metadata = parse_metadata(metadata_location)
     data_list = collect(data, x_3d, metadata)
+    add_color(data_list, color_by)
     with open(file_path, 'w') as outfile:
         json.dump(data_list, outfile, indent=4, separators=(',', ':'))
 
@@ -107,7 +156,8 @@ def collect(data, x_3d, metadata):
     lst = []
     for i in range(len(data)):
         fn = data[i][0].split("/")[-1]
-        lst.append([i, x_3d[i][0], x_3d[i][1], x_3d[i][2], fn, metadata[fn] if fn in metadata else []])
+        lst.append([i, x_3d[i][0], x_3d[i][1], 0 if len(x_3d[i]) < 3 else x_3d[i][2], fn,
+                    metadata[fn] if fn in metadata else []])
     return lst
 
 if __name__ == "__main__":

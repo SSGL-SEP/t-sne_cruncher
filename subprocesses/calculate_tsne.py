@@ -36,10 +36,12 @@ def save_tsv(data: np.ndarray, file_name: str):
     np.savetxt(file_name, data, fmt="%.5f", delimiter="\t")
 
 
-def t_sne(data: np.ndarray, initial_dims: int = 30, perplexity: int = 30, output_file: str = None):
+def t_sne(data: np.ndarray, initial_dims: int = 30, perplexity: int = 30, output_file: str = None, no_dims: int = 3):
     """
     Use t-SNE to create a 3-dimensional projection of a 2-dimensional numpy array
     
+    :param no_dims: Number of output dimensions. Typically 3 or 2
+    :type no_dims: int
     :param data: Two-dimensional numpy array to reduce.
     :type data: numpy.ndarray
     :param initial_dims: Number of initial dimensions.
@@ -51,7 +53,7 @@ def t_sne(data: np.ndarray, initial_dims: int = 30, perplexity: int = 30, output
     :return: Two-dimensional numpy array containing 3-dimensional coordinates for elements.
     :rtype: numpy.ndarray
     """
-    x_3d = tsne(data, no_dims=3, initial_dims=initial_dims, perplexity=perplexity)
+    x_3d = tsne(data, no_dims=no_dims, initial_dims=initial_dims, perplexity=perplexity)
     if output_file:
         save_tsv(x_3d, output_file)
     return x_3d
@@ -61,7 +63,7 @@ def plot_t_sne(x_3d: np.ndarray, output_file: str = os.path.join(os.getcwd(), 'p
     """
     Create a scatter plot of a t-SNE 3d projection
     
-    :param x_3d: Two-dimensional numpy array containing 3-dimensional coordinates for elements.
+    :param x_3d: Two-dimensional numpy array containing 2 or 3-dimensional coordinates for elements.
     :type x_3d: numpy.ndarray
     :param output_file: .png file to write scatter plot to.
     :type output_file: str
