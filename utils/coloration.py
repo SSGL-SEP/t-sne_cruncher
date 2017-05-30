@@ -19,7 +19,7 @@ def _set_color(e, color_by, s, c):
 
 
 def _color_by_tag(data_list, color_by):
-    s = {d["val"]: 0 for e in dl for d in e[5] if d["key"] == color_by}
+    s = {d["val"]: 0 for e in data_list for d in e[5] if d["key"] == color_by}
     li = sorted(list(s.keys()))
     for i in range(len(li)):
         s[li[i]] = i
