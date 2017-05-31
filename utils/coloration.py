@@ -12,15 +12,14 @@ def _append_color(e, rgb):
 def _set_color(e, color_by, s, c):
     for d in e[5]:
         if d["key"] == color_by:
-            rgb = colorsys.hsv_to_rgb(s[d["key"]] / c, 1, 255)
+            rgb = colorsys.hsv_to_rgb(s[d["val"]] / c, 1, 255)
             _append_color(e, rgb)
             return
     _append_color(e, (255, 255, 255))
 
 
 def _color_by_tag(data_list, color_by):
-    s = {d["key"]: 0 for d in filter((lambda x: x["key"] == color_by),
-                                     reduce((lambda x, y: x + y), [e[5] for e in data_list]))}
+    s = {d["val"]: 0 for e in data_list for d in e[5] if d["key"] == color_by}
     li = sorted(list(s.keys()))
     for i in range(len(li)):
         s[li[i]] = i
