@@ -23,8 +23,6 @@ def _arg_parse():
                             help="Folder to read audio files from. Default: current directory.")
     arg_parser.add_argument("-p", "--perplexity", nargs='*', type=int, default=[30],
                             help="Perplexity to use in t-sne crunching. Default: [30].")
-    # arg_parser.add_argument("-n", "--initial_dimensions", type=int, default=30,
-    #                         help="Number of initial dimensions for t-sne crunching. Default: 30.")
     arg_parser.add_argument("-o", "--output_file", type=str, default=os.path.join(os.getcwd(), 't_sne.json'),
                             help="File to output 3d data to. Default: tsv.json in current directory.")
     arg_parser.add_argument("-r", "--fingerprint_output", type=str, default=None,
