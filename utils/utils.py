@@ -87,3 +87,8 @@ def _parse_row(d, h, row):
     for i in range(len(row)):
         if row[i]:
             d[row[0]].append({"key": h[i], "val": row[i]})
+
+
+def insert_suffix(file_path, suffix):
+    prefix, ext = os.path.splitext(file_path)
+    return "".join([prefix, suffix, ext])

@@ -1,8 +1,12 @@
 """Provides functions for performing a t-SNE reduction on audio fingerprint data"""
 import os
 from time import time
+from multiprocessing.pool import Pool
+
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn.manifold import TSNE
+
 from utils import *
 
 
@@ -36,7 +40,7 @@ def save_tsv(data: np.ndarray, file_name: str):
     np.savetxt(file_name, data, fmt="%.5f", delimiter="\t")
 
 
-def t_sne(data: np.ndarray, initial_dims: int = 30, perplexity: int = 30, output_file: str = None, no_dims: int = 3):
+def t_sne(data: np.ndarray, perplexity=None, output_file: str = None, no_dims: int = 3):
     """
     Use t-SNE to create a 3-dimensional projection of a 2-dimensional numpy array
     
@@ -44,19 +48,26 @@ def t_sne(data: np.ndarray, initial_dims: int = 30, perplexity: int = 30, output
     :type no_dims: int
     :param data: Two-dimensional numpy array to reduce.
     :type data: numpy.ndarray
-    :param initial_dims: Number of initial dimensions.
-    :type initial_dims: int
     :param perplexity: Initial perplexity value
-    :type perplexity: int
+    :type perplexity: List[int]
     :param output_file: Optional .tsv output file for the projected data.
     :type output_file: str
     :return: Two-dimensional numpy array containing 3-dimensional coordinates for elements.
-    :rtype: numpy.ndarray
+    :rtype: List[numpy.ndarray]
     """
-    x_3d = tsne(data, no_dims=no_dims, initial_dims=initial_dims, perplexity=perplexity)
-    if output_file:
-        save_tsv(x_3d, output_file)
-    return x_3d
+    if perplexity is None:
+        perplexity = [30]
+    with Pool() as p:
+        l_3d = list(p.map(t_sne_job, [(data, x, no_dims) for x in perplexity]))
+    for x_3d in l_3d:
+        if output_file:
+            save_tsv(x_3d[0], insert_suffix(output_file, x_3d[1]))
+    return l_3d
+
+
+def t_sne_job(params):
+    model = TSNE(n_components=params[2], perplexity=params[1], method='exact')
+    return model.fit_transform(params[0]), str(params[1])
 
 
 def plot_t_sne(x_3d: np.ndarray, output_file: str = os.path.join(os.getcwd(), 'prints.png')):
