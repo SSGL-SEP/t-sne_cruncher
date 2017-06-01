@@ -23,8 +23,9 @@ def calculate_tsne(file_path: str = os.path.join(os.getcwd(), 'fingerprints.npy'
     start = time()
     x_3d = t_sne(data)
     # noinspection PyTypeChecker
-    plot_t_sne(x_3d)
-    print('initial_dims={}, perplexity={}, {} seconds'.format(30, 30, time() - start))
+    for to_plot in x_3d:
+        plot_t_sne(to_plot[0])
+    print('perplexity={}, {} seconds'.format(30, time() - start))
     return x_3d
 
 
@@ -66,6 +67,7 @@ def t_sne(data: np.ndarray, perplexity=None, output_file: str = None, no_dims: i
 
 
 def t_sne_job(params):
+    print("Running t-SNE with perplexity {}".format(params[1]))
     model = TSNE(n_components=params[2], perplexity=params[1], method='exact')
     return model.fit_transform(params[0]), str(params[1])
 
@@ -83,8 +85,11 @@ def plot_t_sne(x_3d: np.ndarray, output_file: str = os.path.join(os.getcwd(), 'p
     point_size = 100
 
     plt.figure(figsize=fig_size)
+    x_coords = [x[0] for x in x_3d]
+    y_coords = [y[1] for y in x_3d]
+    colors = [(c[0] + c[1] + c[2]) for c in x_3d]
     # noinspection PyTypeChecker,PyTypeChecker,PyTypeChecker
-    plt.scatter([y[0] for y in x_3d], [y[1] for y in x_3d], c=[sum(y) for y in x_3d], s=point_size)
+    plt.scatter(x_coords, y_coords, c=colors, s=point_size)
     plt.tight_layout()
     plt.savefig(output_file)
     plt.close()
