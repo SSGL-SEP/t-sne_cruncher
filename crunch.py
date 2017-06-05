@@ -82,6 +82,7 @@ def main(args):
     results, file_data = _read_data_to_fingerprints(args.max_duration, args.input_folder)
     results = np.asarray(results).astype(np.float32)
     if args.fingerprint_output:
+        print("a swing and a miss")
         np.save(args.fingerprint_output, results)
     results = results.astype(np.float64)
     results = results.reshape(len(results), -1)

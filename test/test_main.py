@@ -1,7 +1,7 @@
 import os
 from unittest import mock, TestCase
 
-import numpy as np
+import numpy
 
 import crunch
 
@@ -22,7 +22,7 @@ class TestMain(TestCase):
 
     def test_collect(self):
         data = [("root/fna.wav", 16000), ("root/fnb.wav", 16000), ("root/fnc.wav", 16000)]
-        x_d = np.asarray([[1, 1], [2, 2, 2], [3, 3]])
+        x_d = numpy.asarray([[1, 1], [2, 2, 2], [3, 3]])
         s = {"fna.wav": [{"key": "phonem", "val": "a"}]}
         lst = crunch.collect(data, x_d, s)
         self.assertEqual(len(lst), 3, "Unexpected element count. 3 expected. Was {}".format(len(lst)))
@@ -43,14 +43,50 @@ class TestMain(TestCase):
                 mopen.assert_called_with("root/st.json", "w")
                 self.assertTrue(mock_json_dump.called, "json dump not called")
 
-    def test_main(self):
-        pass
-        # TODO: write test
+    @mock.patch("crunch._read_data_to_fingerprints")
+    @mock.patch("crunch.PCA")
+    @mock.patch("crunch._finalize")
+    def test_main_pca(self, mock_finalize, mock_PCA, mock_read):
+        numpy.save = mock.MagicMock()
+        model = mock.MagicMock()
+        out = "mock_results"
+        model.fit_transform.return_value = numpy.asarray(out)
+        mock_PCA.return_value = model
+        res = [numpy.asarray([[1, 2], [3, 4]]), numpy.asarray([[2, 3], [4, 5]])]
+        fd = [("1.wav", 4), ("2.wav", 4)]
+        mock_read.return_value = (res, fd)
+        ap = crunch._arg_parse()
+        args = ap.parse_args(args=["-f", "mock/", "-o", "mock.json", "-r", "mock_fing.npy", "-m", "-100", "-x",
+                                   "100", "-t", "mock.png", "-c", "mock/mock.csv", "-d", "4000",
+                                   "--td", "--colorby", "phonem", "--pca"])
+        crunch.main(args)
+        mock_read.assert_called_with(4000, "mock/")
+        self.assertTrue(numpy.save.called, "Save not called")
+        mock_PCA.assert_called_with(n_components=2, svd_solver="full")
+        self.assertTrue(model.fit_transform.called, "PCA fit transform not called")
+        mock_finalize.assert_called_with(out, args, fd)
+
+    @mock.patch("crunch._read_data_to_fingerprints")
+    @mock.patch("crunch.t_sne")
+    @mock.patch("crunch._finalize")
+    def test_main_t_sne(self, mock_finalize, mock_t_sne, mock_read):
+        res = [numpy.asarray([[1, 2], [3, 4]]), numpy.asarray([[2, 3], [4, 5]])]
+        fd = [("1.wav", 4), ("2.wav", 4)]
+        mock_read.return_value = (res, fd)
+        mock_t_sne.return_value = [("mock1val1", "mock1val2"), ("mock2val1", "mock2val2")]
+        ap = crunch._arg_parse()
+        args = ap.parse_args(args=["-f", "mock/", "-o", "mock.json", "-m", "-100", "-x",
+                                   "100", "-t", "mock.png", "-c", "mock/mock.csv", "-d", "4000",
+                                   "--colorby", "phonem"])
+        crunch.main(args)
+        mock_read.assert_called_with(4000, "mock/")
+        self.assertTrue(mock_t_sne.called, "t_SNE not called")
+        mock_finalize.assert_called_with("mock2val1", args, fd, "mock2val2")
 
     @mock.patch("scipy.io.wavfile.read")
     @mock.patch("crunch.all_files")
     def test_read_data_to_fingerprints(self, mock_all_files, mock_wav_load):
-        mock_wav_load.return_value = (16000, np.asarray(range(16000)))
+        mock_wav_load.return_value = (16000, numpy.asarray(range(16000)))
         mock_all_files.return_value = ["mock.wav"]
         res, fd = crunch._read_data_to_fingerprints(1000, "mock/")
         self.assertEqual(fd[0][0], "mock.wav", "Unexpected file name")
@@ -61,8 +97,8 @@ class TestMain(TestCase):
     @mock.patch("crunch.normalize")
     @mock.patch("crunch.plot_t_sne")
     def test_finalize(self, mock_plot, mock_normalize, mock_output):
-        ndarr = np.asarray([[1, 2, 3]])
-        norarr = np.asarray([[0, 300, 600]])
+        ndarr = numpy.asarray([[1, 2, 3]])
+        norarr = numpy.asarray([[0, 300, 600]])
         mock_normalize.return_value = norarr
         args = mock.MagicMock()
         args.plot_output = "mock.png"
