@@ -44,18 +44,37 @@ def _arg_parse():
                             help="Generate sample coloring based on metadata tag. "
                                  "Default: manhattan distance from origin")
     arg_parser.add_argument("--pca", action="store_true", help="Run dimensionality reduction with PCA instead of t-SNE")
+    arg_parser.add_argument("--fft", action="store_true", help="Fingerprint using simple fft instead of mfcc")
+    arg_parser.add_argument("-s", "--sound_info", type=str, default=None,
+                            help=".json file to read audio data from. Should provide a mapping between audio files"
+                                 "and compressed versions to use when streaming. Default: None")
+    arg_parser.add_argument("-n", "--data_set", type=str, default="dataset",
+                            help="Name of data set the samples are associated with. Default: 'dataset'")
+    arg_parser.add_argument("-e", "--processing_method", type=str, default="t-SNE",
+                            help="Descriptive name for the fingerprinting/mapping functions used. Default: 't_SNE'")
+    arg_parser.add_argument("-u", "--unfilterables", type=str, nargs='*', default=["name", "filename"],
+                            help="List of tags that should not be used for filtering.")
     return arg_parser
 
 
-# noinspection PyTypeChecker
-def _finalize(x_3d, args, data, suffix=""):
+def _finalize(x_3d: np.ndarray, args, data: list, metadata: dict, suffix: str = "") -> None:
     if args.plot_output:
         plot_t_sne(x_3d, insert_suffix(args.plot_output, suffix))
     x_3d = normalize(np.asarray(x_3d), args.value_minimum, args.value_maximum)
-    output(insert_suffix(args.output_file, suffix), data, x_3d, args.collect_metadata, args.colorby)
+    output(insert_suffix(args.output_file, suffix), data, x_3d, args, metadata)
 
 
-def _read_data_to_fingerprints(max_duration, input_folder):
+def _read_data_to_fingerprints(max_duration: int, input_folder: str, fft: bool = False) -> tuple:
+    """
+    Read audio files and generate fingerprint data
+
+    :param max_duration: Maximum allowed duration of audio samples in ms.
+    :type max_duration: int
+    :param input_folder: Folder path to read files from
+    :type input_folder: str
+    :return: A list with fingerprint data and a list of file data
+    :rtype: Tuple[List[numpy.ndarray], List[Tuple[str, int]]]
+    """
     file_list = list(all_files(input_folder, [".wav"]))
     results = []
     file_data = []
@@ -65,7 +84,10 @@ def _read_data_to_fingerprints(max_duration, input_folder):
             data = p.map(load_sample, [(max_duration, f) for f in file_list[count:(count + 1000)]])
             print("read to {}".format(min(len(file_list), count + 1000)))
             file_data += [(x[0], x[2]) for x in data]
-            results += list(p.map(fingerprint_form_data, [x[1] for x in data]))
+            if fft:
+                results += list(p.map(fingerprint_form_data, [x[1] for x in data]))
+            else:
+                results += list(p.map(mfcc_fingerprint, [(x[1], x[3]) for x in data]))
             count += 1000
     return results, file_data
 
@@ -79,68 +101,50 @@ def main(args):
     """
     t = time.time()
     output_dimensions = 2 if args.td else 3
-    results, file_data = _read_data_to_fingerprints(args.max_duration, args.input_folder)
+    results, file_data = _read_data_to_fingerprints(args.max_duration, args.input_folder, args.fft)
     results = np.asarray(results).astype(np.float32)
     if args.fingerprint_output:
-        print("a swing and a miss")
         np.save(args.fingerprint_output, results)
     results = results.astype(np.float64)
     results = results.reshape(len(results), -1)
-    # x_3d = t_sne(results, initial_dims=args.initial_dimensions, perplexity=args.perplexity, no_dims=output_dimensions)
+    metadata = {}
+    if args.collect_metadata:
+        metadata = parse_metadata(args.collect_metadata,
+                                  {file_data[i][0].split('/')[-1]: i for i in range(len(file_data))},
+                                  args.unfilterables)
     if args.pca:
         model = PCA(n_components=output_dimensions, svd_solver='full')
         x_3d = model.fit_transform(results)
-        _finalize(x_3d, args, file_data)
+        _finalize(x_3d, args, file_data, metadata)
     else:
         l_3d = t_sne(results, perplexity=args.perplexity, no_dims=output_dimensions)
         for x_3d in l_3d:
-            _finalize(x_3d[0], args, file_data, x_3d[1])
+            _finalize(x_3d[0], args, file_data, metadata, x_3d[1])
     print("Crunching completed in ", int(time.time() - t), " seconds")
 
 
-def output(file_path, data, x_3d, metadata_location, color_by):
-    """
-    Dump json containing calculated 2d or 3d projection and possibly metadata.
-    
-    :param color_by: tag to color samples by 
-    :type color_by: Union(str, None)
-    :param file_path: .json file to write results to
-    :type file_path: str
-    :param data: File name and length as provided by the _read_data_to_fingerprints.
-    :type data: List[Tuple[str, int]]
-    :param x_3d: The numpy array containing the 3d projection.
-    :type x_3d: numpy.ndarray
-    :param metadata_location: .csv file to load metadata from.
-    :type metadata_location: Union(str, None)
-    """
-    metadata = {}
-    if metadata_location:
-        metadata = parse_metadata(metadata_location)
-    data_list = collect(data, x_3d, metadata)
-    add_color(data_list, color_by)
+def output(file_path: str, data: list, x_3d: np.ndarray, args, metadata) -> None:
+    data_list = collect(data, x_3d, metadata, args)
     with open(file_path, 'w') as outfile:
         json.dump(data_list, outfile, indent=4, separators=(',', ':'))
 
 
-def collect(data, x_3d, metadata):
-    """
-    Create a list of objects to write to json.
+def _make_header(args, point_count):
+    return {"soundInfo": args.sound_info, "dataSet": args.data_set,
+            "processingMethod": args.processing_method, "colorBy": args.colorby,
+            "totalPoints": point_count}
 
-    :param data: file name and length as provided by the _read_data_to_fingerprints
-    :type data: List[Tuple[str, int]]
-    :param x_3d: The numpy array containing the 3d projection
-    :type x_3d: numpy.ndarray
-    :param metadata: Dictionary containing metadata for the files.
-    :type metadata: Dict
-    :return: A list of lists of values to be written to json.
-    :rtype: List[List[Union[int, str, List[Dict{str : str}]]]]
-    """
+
+def collect(data: list, x_3d: np.ndarray, metadata: dict, args) -> dict:
+    out_data = _make_header(args, len(data))
+    add_color(metadata, x_3d)
+    out_data["tags"] = metadata
     lst = []
     for i in range(len(data)):
         fn = data[i][0].split("/")[-1]
-        lst.append([i, x_3d[i][0], x_3d[i][1], 0 if len(x_3d[i]) < 3 else x_3d[i][2], fn,
-                    metadata[fn] if fn in metadata else []])
-    return lst
+        lst.append([x_3d[i][0], x_3d[i][1], 0 if len(x_3d[i]) < 3 else x_3d[i][2], fn])
+    out_data["points"] = lst
+    return out_data
 
 if __name__ == "__main__":
     main(_arg_parse().parse_args())

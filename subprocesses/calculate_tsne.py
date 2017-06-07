@@ -66,7 +66,15 @@ def t_sne(data: np.ndarray, perplexity=None, output_file: str = None, no_dims: i
     return l_3d
 
 
-def t_sne_job(params):
+def t_sne_job(params: tuple) -> tuple:
+    """
+    run r_sne fit transform on specified data in a specified way
+
+    :param params: tuple of data, perplexity, output dimension
+    :type params: tuple(numpy.ndarray, int, int)
+    :return: typle of reduced data and perplexity
+    :rtype: tuple(numpy.ndarray, str)
+    """
     print("Running t-SNE with perplexity {}".format(params[1]))
     model = TSNE(n_components=params[2], perplexity=params[1], method='exact')
     return model.fit_transform(params[0]), str(params[1])
@@ -87,13 +95,11 @@ def plot_t_sne(x_3d: np.ndarray, output_file: str = os.path.join(os.getcwd(), 'p
     plt.figure(figsize=fig_size)
     x_coords = [x[0] for x in x_3d]
     y_coords = [y[1] for y in x_3d]
-    colors = [(c[0] + c[1] + c[2]) for c in x_3d]
-    # noinspection PyTypeChecker,PyTypeChecker,PyTypeChecker
+    colors = [(c[0] + c[1] + (c[2] if len(c) > 2 else 0)) for c in x_3d]
     plt.scatter(x_coords, y_coords, c=colors, s=point_size)
     plt.tight_layout()
     plt.savefig(output_file)
     plt.close()
 
 if __name__ == "__main__":
-    # If run as a script: attempts to create a 3d projection of data read from 'fingerprints.npy'
     calculate_tsne()

@@ -17,7 +17,7 @@ class TestCollectData(TestCase):
         self.assertTrue(mock_os_walk.called, "mock_os_walk not called")
         self.assertTrue(mock_print.called, "mock_print not called")
         self.assertFalse(numpy.save.called, "numpy save called")
-        self.assertEqual(res[0][2], 10, "Incorrect audio length")
+        self.assertEqual(res[0][2], 8000, "Incorrect audio length")
 
     @mock.patch("scipy.io.wavfile.read")
     @mock.patch("os.walk")

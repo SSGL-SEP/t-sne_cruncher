@@ -49,5 +49,16 @@ def fingerprint_form_data(y: np.ndarray):
     amp = np.flipud(amp)
     return amp
 
+
+def mfcc_fingerprint(tup: tuple):
+    """
+
+    :param tup: tuple containing audio data and sample rate
+    :type tup: tuple(numpy.ndarray, int)
+    :return: mfcc fingerprint
+    :rtype: numpy.ndarray
+    """
+    return librosa.feature.mfcc(y=tup[0], sr=tup[1])
+
 if __name__ == "__main__":
     fingerprint_from_file_data(target_npy_file=os.path.join(os.getcwd(), 'fingerprints.npy'))

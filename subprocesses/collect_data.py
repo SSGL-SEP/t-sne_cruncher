@@ -48,15 +48,16 @@ def load_sample(tup: (int, str)):
     """
     fn = tup[1]
     max_duration = tup[0]
-    audio = wf.read(fn)
-    max_samples = (audio[0] * max_duration) // 1000
-    audio = audio[1]
+    sr, audio = wf.read(fn)
+    max_samples = (sr * max_duration) // 1000
     if len(audio.shape) > 1:
-        audio = [x[0] for x in audio]
+        audio = np.asarray([x[0] for x in audio])
     if len(audio) > max_samples:
         audio = np.resize(audio, max_samples)
+    elif len(audio) < max_samples:
+        audio = np.pad(audio, (0, max_samples - len(audio)), 'constant')
     print(fn, " loaded.")
-    return fn, audio, len(audio)
+    return fn, audio, len(audio), sr
 
 
 if __name__ == "__main__":

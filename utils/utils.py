@@ -60,7 +60,7 @@ def normalize(x: np.ndarray, min_value: int, max_value: int):
     return x
 
 
-def parse_metadata(file_path: str):
+def parse_metadata(file_path: str, index_dict: dict, unfilterables: list) -> dict:
     """
     Parse .csv file containing metadata into a dictionary.
 
@@ -76,19 +76,44 @@ def parse_metadata(file_path: str):
         for row in csv_reader:
             if not h:
                 h = row
+                for t in h:
+                    d[t] = {"__filterable": t not in unfilterables}
             else:
-                _parse_row(d, h, row)
+                _parse_row(d, h, row, index_dict)
     return d
 
 
-def _parse_row(d, h, row):
-    if row[0] not in d:
-        d[row[0]] = []
+def _parse_row(d: dict, h: list, row: list, index_dict: dict) -> None:
+    """
+    Add csv row data to dictionary
+
+    :param d: dictionary to add data to
+    :type d: Dict[str, List[Dict[str, str]]]
+    :param h: list of header data
+    :type h: List[str]
+    :param row: data to add to dictionary
+    :type row: List[str]
+    """
+    if row[0] not in index_dict:
+        return
+    fi = index_dict[row[0]]
     for i in range(len(row)):
-        if row[i]:
-            d[row[0]].append({"key": h[i], "val": row[i]})
+        if row[i] in d[h[i]]:
+            d[h[i]][row[i]]["points"].append(fi)
+        else:
+            d[h[i]][row[i]] = {"points": [fi]}
 
 
-def insert_suffix(file_path, suffix):
+def insert_suffix(file_path: str, suffix: str) -> str:
+    """
+    Insert suffix into file path foo/bar.json, _1 -> foo/bar_1.json
+
+    :param file_path: file path to insert suffix into
+    :type file_path: str
+    :param suffix: suffix to insert
+    :type suffix: str
+    :return: modified file path
+    :rtype: str
+    """
     prefix, ext = os.path.splitext(file_path)
     return "".join([prefix, suffix, ext])
