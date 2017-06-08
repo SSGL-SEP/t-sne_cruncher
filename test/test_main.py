@@ -6,11 +6,6 @@ import numpy
 import crunch
 
 
-class PickableMock(mock.MagicMock):
-    def __reduce__(self):
-        return (mock.MagicMock, ())
-
-
 class TestMain(TestCase):
     def _file_data_comp(self, data, index, x_coord, y_coord, z_coord, file_name, tags):
         self.assertEqual(data[0], index, "Unexpected index. Expected {}, Got{}".format(index, data[0]))
@@ -21,32 +16,40 @@ class TestMain(TestCase):
         self.assertEqual(data[5], tags, "Unexpected tag list. Expected {}, Got{}".format(tags, data[5]))
 
     def test_collect(self):
+        ap = crunch._arg_parse()
+        args = ap.parse_args(args=["--colorby", "phoneme", "-s", "mock_sound_info.json", "-n",
+                                   "mock_nsynth", "-e", "mock - pca"])
         data = [("root/fna.wav", 16000), ("root/fnb.wav", 16000), ("root/fnc.wav", 16000)]
         x_d = numpy.asarray([[1, 1], [2, 2, 2], [3, 3]])
-        s = {"fna.wav": [{"key": "phonem", "val": "a"}]}
-        lst = crunch.collect(data, x_d, s)
-        self.assertEqual(len(lst), 3, "Unexpected element count. 3 expected. Was {}".format(len(lst)))
-        self._file_data_comp(lst[0], 0, 1, 1, 0, "fna.wav", [{"key": "phonem", "val": "a"}])
-        self._file_data_comp(lst[1], 1, 2, 2, 2, "fnb.wav", [])
-        self._file_data_comp(lst[2], 2, 3, 3, 0, "fnc.wav", [])
+        s = {"phoneme": {"a": {"color": "#ffffff", "points": [0, 1, 2]}, "__filterable":  True, }}
+        d = crunch.collect(data, x_d, s, args)
+        self.assertEqual(len(d.keys()), 7, "Unexpected number of keys")
+        self.assertEqual(d["totalPoints"], 3, "unexpected number in totalPoints")
+        self.assertEqual(d["soundInfo"], "mock_sound_info.json")
+        self.assertEqual(d["dataSet"], "mock_nsynth")
+        self.assertEqual(d["processingMethod"], "mock - pca")
+        self.assertEqual(d["colorBy"], "phoneme")
+        self.assertEqual(len(d["tags"].keys()), 1)
+        self.assertEqual(len(d["points"]), 3)
 
-    @mock.patch("crunch.parse_metadata")
     @mock.patch("crunch.add_color")
-    def test_output(self, mock_add_color, mock_parse_metadata):
-        mock_parse_metadata.return_value = {"bla.wav":
-                                            [{"key": "phonem", "val": "a"}, {"key": "voice", "val": "voiced"}]}
+    def test_output(self, mock_add_color):
+        s = {"phoneme": {"a": {"color": "#ffffff", "points": [0, 1, 2]}, "__filterable": True, }}
         with mock.patch("builtins.open", mock.mock_open()) as mopen:
             with mock.patch("json.dump") as mock_json_dump:
-                crunch.output("root/st.json", [("bla.wav", 1)], [[1, 2, 3]], "bla.csv", None)
+                crunch.output("root/st.json", [("bla.wav", 1)], numpy.asarray([[1, 2, 3]]),
+                              crunch._arg_parse().parse_args(), s)
                 self.assertTrue(mock_add_color.called)
-                mock_parse_metadata.assert_called_with("bla.csv")
                 mopen.assert_called_with("root/st.json", "w")
                 self.assertTrue(mock_json_dump.called, "json dump not called")
 
+    @mock.patch("crunch.parse_metadata")
     @mock.patch("crunch._read_data_to_fingerprints")
     @mock.patch("crunch.PCA")
     @mock.patch("crunch._finalize")
-    def test_main_pca(self, mock_finalize, mock_PCA, mock_read):
+    def test_main_pca(self, mock_finalize, mock_PCA, mock_read, mock_parse_metadata):
+        s = {"phoneme": {"a": {"color": "#ffffff", "points": [0, 1]}, "__filterable": True, }}
+        mock_parse_metadata.return_value = s
         numpy.save = mock.MagicMock()
         model = mock.MagicMock()
         out = "mock_results"
@@ -60,16 +63,20 @@ class TestMain(TestCase):
                                    "100", "-t", "mock.png", "-c", "mock/mock.csv", "-d", "4000",
                                    "--td", "--colorby", "phonem", "--pca"])
         crunch.main(args)
-        mock_read.assert_called_with(4000, "mock/", False)
+        mock_parse_metadata.assert_called()
+        mock_read.assert_called_with(4000, "mock/", 0, False)
         self.assertTrue(numpy.save.called, "Save not called")
         mock_PCA.assert_called_with(n_components=2, svd_solver="full")
         self.assertTrue(model.fit_transform.called, "PCA fit transform not called")
-        mock_finalize.assert_called_with(out, args, fd)
+        mock_finalize.assert_called_with(out, args, fd, s)
 
+    @mock.patch("crunch.parse_metadata")
     @mock.patch("crunch._read_data_to_fingerprints")
     @mock.patch("crunch.t_sne")
     @mock.patch("crunch._finalize")
-    def test_main_t_sne(self, mock_finalize, mock_t_sne, mock_read):
+    def test_main_t_sne(self, mock_finalize, mock_t_sne, mock_read, mock_parse_metadata):
+        s = {"phoneme": {"a": {"color": "#ffffff", "points": [0, 1]}, "__filterable": True, }}
+        mock_parse_metadata.return_value = s
         res = [numpy.asarray([[1, 2], [3, 4]]), numpy.asarray([[2, 3], [4, 5]])]
         fd = [("1.wav", 4), ("2.wav", 4)]
         mock_read.return_value = (res, fd)
@@ -79,9 +86,10 @@ class TestMain(TestCase):
                                    "100", "-t", "mock.png", "-c", "mock/mock.csv", "-d", "4000",
                                    "--colorby", "phonem"])
         crunch.main(args)
-        mock_read.assert_called_with(4000, "mock/", False)
+        mock_parse_metadata.assert_called()
+        mock_read.assert_called_with(4000, "mock/", 0, False)
         self.assertTrue(mock_t_sne.called, "t_SNE not called")
-        mock_finalize.assert_called_with("mock2val1", args, fd, "mock2val2")
+        mock_finalize.assert_called_with("mock2val1", args, fd, s, "mock2val2")
 
     @mock.patch("scipy.io.wavfile.read")
     @mock.patch("crunch.all_files")
@@ -91,7 +99,7 @@ class TestMain(TestCase):
         res, fd = crunch._read_data_to_fingerprints(1000, "mock/", True)
         self.assertEqual(fd[0][0], "mock.wav", "Unexpected file name")
         self.assertEqual(fd[0][1], 16000, "Unexpected sample length")
-        self.assertEqual(res[0].shape, (32, 32), "Invalid result array")
+        self.assertEqual(res[0].shape, (20, 32), "Invalid result array")
 
     @mock.patch("crunch.output")
     @mock.patch("crunch.normalize")
@@ -107,10 +115,14 @@ class TestMain(TestCase):
         args.output_file = "mock.json"
         args.collect_metadata = None
         args.colorby = None
-        crunch._finalize(ndarr, args, "mock data")
+        data = list([numpy.asarray([1, 2, 3]),
+                     numpy.asarray([2, 3, 4]),
+                     numpy.asarray([4, 5, 6])])
+        s = {"phoneme": {"a": {"color": "#ffffff", "points": [0, 1, 2]}, "__filterable": True, }}
+        crunch._finalize(ndarr, args, data, s)
         mock_plot.assert_called_with(ndarr, "mock.png")
         mock_normalize.assert_called_with(ndarr, 0, 600)
-        mock_output.assert_called_with("mock.json", "mock data", norarr, None, None)
+        mock_output.assert_called_with("mock.json", data, norarr, args, s)
 
     def test_arg_parse_defaults(self):
         ap = crunch._arg_parse()

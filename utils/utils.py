@@ -60,7 +60,7 @@ def normalize(x: np.ndarray, min_value: int, max_value: int):
     return x
 
 
-def parse_metadata(file_path: str, index_dict: dict, unfilterables: list) -> dict:
+def parse_metadata(file_path: str, index_dict: dict, unfilterables: list, ignorables: list) -> dict:
     """
     Parse .csv file containing metadata into a dictionary.
 
@@ -77,13 +77,14 @@ def parse_metadata(file_path: str, index_dict: dict, unfilterables: list) -> dic
             if not h:
                 h = row
                 for t in h:
-                    d[t] = {"__filterable": t not in unfilterables}
+                    if t not in ignorables:
+                        d[t] = {"__filterable": t not in unfilterables}
             else:
-                _parse_row(d, h, row, index_dict)
+                _parse_row(d, h, row, index_dict, ignorables)
     return d
 
 
-def _parse_row(d: dict, h: list, row: list, index_dict: dict) -> None:
+def _parse_row(d: dict, h: list, row: list, index_dict: dict, ignorables: list) -> None:
     """
     Add csv row data to dictionary
 
@@ -98,6 +99,8 @@ def _parse_row(d: dict, h: list, row: list, index_dict: dict) -> None:
         return
     fi = index_dict[row[0]]
     for i in range(len(row)):
+        if h[i] in ignorables:
+            continue
         if row[i] in d[h[i]]:
             d[h[i]][row[i]]["points"].append(fi)
         else:

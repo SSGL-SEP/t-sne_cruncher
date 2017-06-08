@@ -39,21 +39,25 @@ def _arg_parse():
     arg_parser.add_argument("-d", "--max_duration", type=int, default=500,
                             help="Maximum duration of sound samples (in milliseconds). Longer samples will be "
                                  "truncated to the given length. Default: 500ms")
+    arg_parser.add_argument("-u", "--unfilterables", type=str, nargs='*', default=["name", "filename", "file name"],
+                            help="List of tags that should not be used for filtering.")
+    arg_parser.add_argument("-e", "--processing_method", type=str, default="t-SNE",
+                            help="Descriptive name for the fingerprinting/mapping functions used. Default: 't_SNE'")
+    arg_parser.add_argument("-n", "--data_set", type=str, default="dataset",
+                            help="Name of data set the samples are associated with. Default: 'dataset'")
+    arg_parser.add_argument("-s", "--sound_info", type=str, default=None,
+                            help=".json file to read audio data from. Should provide a mapping between audio files"
+                                 "and compressed versions to use when streaming. Default: None")
+    arg_parser.add_argument("-a", "--max_to_load", type=lambda x: abs(int(x)), default=0,
+                            help="Maximum number of samples to load. Default: 0 to load all samples")
+    arg_parser.add_argument("-b", "--tags_to_ignore", type=str, nargs='*', default=["name", "filename", "file name"],
+                            help="List of tags to completely ignore.")
     arg_parser.add_argument("--td", help="Generates 2d data instead of the default 3d.", action="store_true")
     arg_parser.add_argument("--colorby", type=str, default=None,
                             help="Generate sample coloring based on metadata tag. "
                                  "Default: manhattan distance from origin")
     arg_parser.add_argument("--pca", action="store_true", help="Run dimensionality reduction with PCA instead of t-SNE")
     arg_parser.add_argument("--fft", action="store_true", help="Fingerprint using simple fft instead of mfcc")
-    arg_parser.add_argument("-s", "--sound_info", type=str, default=None,
-                            help=".json file to read audio data from. Should provide a mapping between audio files"
-                                 "and compressed versions to use when streaming. Default: None")
-    arg_parser.add_argument("-n", "--data_set", type=str, default="dataset",
-                            help="Name of data set the samples are associated with. Default: 'dataset'")
-    arg_parser.add_argument("-e", "--processing_method", type=str, default="t-SNE",
-                            help="Descriptive name for the fingerprinting/mapping functions used. Default: 't_SNE'")
-    arg_parser.add_argument("-u", "--unfilterables", type=str, nargs='*', default=["name", "filename"],
-                            help="List of tags that should not be used for filtering.")
     return arg_parser
 
 
@@ -64,7 +68,7 @@ def _finalize(x_3d: np.ndarray, args, data: list, metadata: dict, suffix: str = 
     output(insert_suffix(args.output_file, suffix), data, x_3d, args, metadata)
 
 
-def _read_data_to_fingerprints(max_duration: int, input_folder: str, fft: bool = False) -> tuple:
+def _read_data_to_fingerprints(max_duration: int, input_folder: str, max_to_load: int, fft: bool = False) -> tuple:
     """
     Read audio files and generate fingerprint data
 
@@ -79,10 +83,11 @@ def _read_data_to_fingerprints(max_duration: int, input_folder: str, fft: bool =
     results = []
     file_data = []
     count = 0
+    max_to_read = min(len(file_list), max_to_load) if max_to_load else len(file_list)
     with Pool() as p:
-        while count < len(file_list):
+        while count < max_to_read:
             data = p.map(load_sample, [(max_duration, f) for f in file_list[count:(count + 1000)]])
-            print("read to {}".format(min(len(file_list), count + 1000)))
+            print("read to {}".format(min(max_to_read, count + 1000)))
             file_data += [(x[0], x[2]) for x in data]
             if fft:
                 results += list(p.map(fingerprint_form_data, [x[1] for x in data]))
@@ -94,14 +99,14 @@ def _read_data_to_fingerprints(max_duration: int, input_folder: str, fft: bool =
 
 def main(args):
     """
-    Run analysis and t-SNE reduction based on command line parameters
+    Run analysis and reduction based on command line parameters
 
     :param args: parsed command line argument object
     :type args: argparse.Namespace
     """
     t = time.time()
     output_dimensions = 2 if args.td else 3
-    results, file_data = _read_data_to_fingerprints(args.max_duration, args.input_folder, args.fft)
+    results, file_data = _read_data_to_fingerprints(args.max_duration, args.input_folder, args.max_to_load, args.fft)
     results = np.asarray(results).astype(np.float32)
     if args.fingerprint_output:
         np.save(args.fingerprint_output, results)
@@ -111,7 +116,8 @@ def main(args):
     if args.collect_metadata:
         metadata = parse_metadata(args.collect_metadata,
                                   {file_data[i][0].split('/')[-1]: i for i in range(len(file_data))},
-                                  args.unfilterables)
+                                  args.unfilterables,
+                                  args.tags_to_ignore)
     if args.pca:
         model = PCA(n_components=output_dimensions, svd_solver='full')
         x_3d = model.fit_transform(results)
