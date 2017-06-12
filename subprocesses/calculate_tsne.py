@@ -76,7 +76,7 @@ def t_sne_job(params: tuple) -> tuple:
     :rtype: tuple(numpy.ndarray, str)
     """
     print("Running t-SNE with perplexity {}".format(params[1]))
-    model = TSNE(n_components=params[2], perplexity=params[1], method='exact')
+    model = TSNE(n_components=params[2], perplexity=params[1], method='exact', verbose=2)
     return model.fit_transform(params[0]), str(params[1])
 
 

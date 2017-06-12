@@ -9,6 +9,7 @@ __pycache__/
 *.pyc
 *.json
 *.csv
+*.tsv
 *.png
 *.tgz
 columns.txt

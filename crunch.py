@@ -36,10 +36,10 @@ def _arg_parse():
     arg_parser.add_argument("-c", "--collect_metadata", type=str, default=None,
                             help="'.csv' file to read file metadata from. audio file names should be in first column. "
                                  "Default: None")
-    arg_parser.add_argument("-d", "--max_duration", type=int, default=500,
-                            help="Maximum duration of sound samples (in milliseconds). Longer samples will be "
-                                 "truncated to the given length. Default: 500ms")
-    arg_parser.add_argument("-u", "--unfilterables", type=str, nargs='*', default=["name", "filename", "file name"],
+    arg_parser.add_argument("-d", "--duration", type=int, default=500,
+                            help="Duration of sound samples (in milliseconds). Longer samples will be "
+                                 "truncated and shorter samples padded. Default: 500ms")
+    arg_parser.add_argument("-u", "--unfilterables", type=str, nargs='*', default=["waveform", "name", "filename", "file name"],
                             help="List of tags that should not be used for filtering.")
     arg_parser.add_argument("-e", "--processing_method", type=str, default="t-SNE",
                             help="Descriptive name for the fingerprinting/mapping functions used. Default: 't_SNE'")
@@ -50,7 +50,7 @@ def _arg_parse():
                                  "and compressed versions to use when streaming. Default: None")
     arg_parser.add_argument("-a", "--max_to_load", type=lambda x: abs(int(x)), default=0,
                             help="Maximum number of samples to load. Default: 0 to load all samples")
-    arg_parser.add_argument("-b", "--tags_to_ignore", type=str, nargs='*', default=["name", "filename", "file name"],
+    arg_parser.add_argument("-b", "--tags_to_ignore", type=str, nargs='*', default=["waveform", "name", "filename", "file name"],
                             help="List of tags to completely ignore.")
     arg_parser.add_argument("--td", help="Generates 2d data instead of the default 3d.", action="store_true")
     arg_parser.add_argument("--colorby", type=str, default=None,
@@ -106,7 +106,7 @@ def main(args):
     """
     t = time.time()
     output_dimensions = 2 if args.td else 3
-    results, file_data = _read_data_to_fingerprints(args.max_duration, args.input_folder, args.max_to_load, args.fft)
+    results, file_data = _read_data_to_fingerprints(args.duration, args.input_folder, args.max_to_load, args.fft)
     results = np.asarray(results).astype(np.float32)
     if args.fingerprint_output:
         np.save(args.fingerprint_output, results)
