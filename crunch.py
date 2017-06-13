@@ -56,7 +56,12 @@ def _arg_parse():
     arg_parser.add_argument("--colorby", type=str, default=None,
                             help="Tag to do default coloring by.")
     arg_parser.add_argument("--pca", action="store_true", help="Run dimensionality reduction with PCA instead of t-SNE")
-    arg_parser.add_argument("--fft", action="store_true", help="Fingerprint using simple fft instead of mfcc")
+    group = arg_parser.add_mutually_exclusive_group()
+    group.add_argument("--fft", action="store_true", help="Fingerprint using simple fft instead of mel spectrogram")
+    group.add_argument("--mfcc", action="store_true", help="Fingerprint using mfcc instead of mel spectrogram")
+    group.add_argument("--tonnez", action="store_true", help="Fingerprint using tonnez instead of mel spectrogram")
+    group.add_argument("--chroma", action="store_true", help="Fingerprint by generating chroma stft instead of"
+                                                             "mel spectrogram")
     return arg_parser
 
 
@@ -67,31 +72,31 @@ def _finalize(x_3d: np.ndarray, args, data: list, metadata: dict, suffix: str = 
     output(insert_suffix(args.output_file, suffix), data, x_3d, args, metadata)
 
 
-def _read_data_to_fingerprints(max_duration: int, input_folder: str, max_to_load: int, fft: bool = False) -> tuple:
+def _read_data_to_fingerprints(args) -> tuple:
     """
     Read audio files and generate fingerprint data
 
-    :param max_duration: Maximum allowed duration of audio samples in ms.
-    :type max_duration: int
-    :param input_folder: Folder path to read files from
-    :type input_folder: str
-    :return: A list with fingerprint data and a list of file data
-    :rtype: Tuple[List[numpy.ndarray], List[Tuple[str, int]]]
     """
-    file_list = list(all_files(input_folder, [".wav"]))
+    file_list = list(all_files(args.input_folder, [".wav"]))
     results = []
     file_data = []
     count = 0
-    max_to_read = min(len(file_list), max_to_load) if max_to_load else len(file_list)
+    max_to_read = min(len(file_list), args.max_to_load) if args.max_to_load else len(file_list)
     with Pool() as p:
         while count < max_to_read:
-            data = p.map(load_sample, [(max_duration, f) for f in file_list[count:(count + 1000)]])
+            data = p.map(load_sample, [(args.duration, f) for f in file_list[count:(count + 1000)]])
             print("read to {}".format(min(max_to_read, count + 1000)))
             file_data += [(x[0], x[2]) for x in data]
-            if fft:
+            if args.fft:
                 results += list(p.map(fingerprint_form_data, [x[1] for x in data]))
-            else:
+            elif args.mfcc:
                 results += list(p.map(mfcc_fingerprint, [(x[1], x[3]) for x in data]))
+            elif args.tonnez:
+                results += list(p.map(tonnez_fingerprint, [(x[1], x[3]) for x in data]))
+            elif args.chroma:
+                results += list(p.map(chroma_fingerprint, [(x[1], x[3]) for x in data]))
+            else:
+                results += list(p.map(ms_fingerprint, [(x[1], x[3]) for x in data]))
             count += 1000
     return results, file_data
 
@@ -105,7 +110,7 @@ def main(args):
     """
     t = time.time()
     output_dimensions = 2 if args.td else 3
-    results, file_data = _read_data_to_fingerprints(args.duration, args.input_folder, args.max_to_load, args.fft)
+    results, file_data = _read_data_to_fingerprints(args)
     results = np.asarray(results).astype(np.float32)
     if args.fingerprint_output:
         np.save(args.fingerprint_output, results)

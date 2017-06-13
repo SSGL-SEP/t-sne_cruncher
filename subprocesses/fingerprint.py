@@ -50,6 +50,18 @@ def fingerprint_form_data(y: np.ndarray):
     return amp
 
 
+def ms_fingerprint(tup: tuple):
+    return librosa.feature.melspectrogram(y=tup[0], sr=tup[1])
+
+
+def tonnez_fingerprint(tup: tuple):
+    return librosa.feature.tonnetz(y=tup[0].astype(np.float64), sr=tup[1])
+
+
+def chroma_fingerprint(tup: tuple):
+    return librosa.feature.chroma_stft(y=tup[0], sr=tup[1])
+
+
 def mfcc_fingerprint(tup: tuple):
     """
 
