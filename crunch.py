@@ -54,8 +54,7 @@ def _arg_parse():
                             help="List of tags to completely ignore.")
     arg_parser.add_argument("--td", help="Generates 2d data instead of the default 3d.", action="store_true")
     arg_parser.add_argument("--colorby", type=str, default=None,
-                            help="Generate sample coloring based on metadata tag. "
-                                 "Default: manhattan distance from origin")
+                            help="Tag to do default coloring by.")
     arg_parser.add_argument("--pca", action="store_true", help="Run dimensionality reduction with PCA instead of t-SNE")
     arg_parser.add_argument("--fft", action="store_true", help="Fingerprint using simple fft instead of mfcc")
     return arg_parser

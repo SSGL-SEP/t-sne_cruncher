@@ -120,3 +120,43 @@ def insert_suffix(file_path: str, suffix: str) -> str:
     """
     prefix, ext = os.path.splitext(file_path)
     return "".join([prefix, suffix, ext])
+
+
+class UnionFind:
+    def __init__(self, items):
+        self.parents = {i: i for i in items}
+        self.sizes = {i: 1 for i in items}
+        self.components = len(items)
+
+    def find(self, a, b):
+        if (a not in self.parents) or (b not in self.parents):
+            raise ValueError("{} or {} not present in union-find structure".format(a, b))
+        return self[a] == self[b]
+
+    def root(self, item):
+        child = item
+        item = self.parents[item]
+        while item != child:
+            self.parents[child] = self.parents[item]
+            child = item
+            item = self.parents[item]
+        return item
+
+    def union(self, a, b):
+        if (a not in self.parents) or (b not in self.parents):
+            raise ValueError("{} or {} not present in union-find structure".format(a, b))
+        a = self[a]
+        b = self[b]
+        if a == b:
+            return False
+        if self.sizes[a] < self.sizes[b]:
+            self.parents[a] = b
+            self.sizes[b] += self.sizes[a]
+        else:
+            self.parents[b] = a
+            self.sizes[a] += self.sizes[b]
+        self.components -= 1
+        return True
+
+    def __getitem__(self, item):
+        return self.root(item)
