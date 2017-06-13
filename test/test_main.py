@@ -15,7 +15,8 @@ class TestMain(TestCase):
         self.assertEqual(data[4], file_name, "Unexpected file name. Expected {}, Got{}".format(file_name, data[4]))
         self.assertEqual(data[5], tags, "Unexpected tag list. Expected {}, Got{}".format(tags, data[5]))
 
-    def test_collect(self):
+    @mock.patch("crunch.add_color")
+    def test_collect(self, mock_add_color):
         ap = crunch._arg_parse()
         args = ap.parse_args(args=["--colorby", "phoneme", "-s", "mock_sound_info.json", "-n",
                                    "mock_nsynth", "-e", "mock - pca"])
@@ -23,6 +24,7 @@ class TestMain(TestCase):
         x_d = numpy.asarray([[1, 1], [2, 2, 2], [3, 3]])
         s = {"phoneme": {"a": {"color": "#ffffff", "points": [0, 1, 2]}, "__filterable":  True, }}
         d = crunch.collect(data, x_d, s, args)
+        mock_add_color.assert_called()
         self.assertEqual(len(d.keys()), 7, "Unexpected number of keys")
         self.assertEqual(d["totalPoints"], 3, "unexpected number in totalPoints")
         self.assertEqual(d["soundInfo"], "mock_sound_info.json")

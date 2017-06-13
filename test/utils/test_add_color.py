@@ -6,18 +6,18 @@ from utils import *
 
 
 def generate_data():
-    return {"phoneme": {"a": {"points": [1]},
-                        "b": {"points": [2]},
-                        "c": {"points": [3]}},
-            "voice": {"voiced": {"points": [1, 2]},
-                      "unvoiced": {"points": [3]}}}
+    return {"phoneme": {"a": {"points": [0]},
+                        "b": {"points": [1]},
+                        "c": {"points": [2]}},
+            "voice": {"voiced": {"points": [0, 1]},
+                      "unvoiced": {"points": [2]}}}
 
 
 def get_array():
     return numpy.asarray([
-        [1, 1, 1, "file_1.wav"],
-        [1, 1, 2, "file_2.wav"],
-        [5, 5, 5, "file_3.wav"]
+        [1, 1, 1],
+        [1, 1, 2],
+        [5, 5, 5]
     ])
 
 
@@ -28,12 +28,12 @@ class TestAddColor(TestCase):
         add_color(metadata, arr)
         print(metadata)
         self.assertEqual(metadata["phoneme"]["a"]["color"],
-                         "#ff0000",
-                         "{} has wrong color. #ff0000 expected. Got {}".format(
-                             "a", metadata["phoneme"]["a"]["color"]))
-        self.assertEqual(metadata["phoneme"]["b"]["color"],
                          "#00ff00",
                          "{} has wrong color. #00ff00 expected. Got {}".format(
+                             "a", metadata["phoneme"]["a"]["color"]))
+        self.assertEqual(metadata["phoneme"]["b"]["color"],
+                         "#ff0000",
+                         "{} has wrong color. #ff0000 expected. Got {}".format(
                              "b", metadata["phoneme"]["b"]["color"]))
         self.assertEqual(metadata["phoneme"]["c"]["color"],
                          "#0000ff",
