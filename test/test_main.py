@@ -66,7 +66,7 @@ class TestMain(TestCase):
                                    "--td", "--colorby", "phonem", "--pca"])
         crunch.main(args)
         mock_parse_metadata.assert_called()
-        mock_read.assert_called_with(4000, "mock/", 0, False)
+        mock_read.assert_called()
         self.assertTrue(numpy.save.called, "Save not called")
         mock_PCA.assert_called_with(n_components=2, svd_solver="full")
         self.assertTrue(model.fit_transform.called, "PCA fit transform not called")
@@ -89,7 +89,7 @@ class TestMain(TestCase):
                                    "--colorby", "phonem"])
         crunch.main(args)
         mock_parse_metadata.assert_called()
-        mock_read.assert_called_with(4000, "mock/", 0, False)
+        mock_read.assert_called()
         self.assertTrue(mock_t_sne.called, "t_SNE not called")
         mock_finalize.assert_called_with("mock2val1", args, fd, s, "mock2val2")
 
@@ -98,7 +98,15 @@ class TestMain(TestCase):
     def test_read_data_to_fingerprints(self, mock_all_files, mock_wav_load):
         mock_wav_load.return_value = (16000, numpy.asarray(range(16000)))
         mock_all_files.return_value = ["mock.wav"]
-        res, fd = crunch._read_data_to_fingerprints(1000, "mock/", True)
+        my_mock = mock.MagicMock()
+        my_mock.input_folder = "mock/"
+        my_mock.max_to_load = 0
+        my_mock.duration = 1000
+        my_mock.fft = False
+        my_mock.mfcc = True
+        my_mock.tonnez = False
+        my_mock.chroma = False
+        res, fd = crunch._read_data_to_fingerprints(my_mock)
         self.assertEqual(fd[0][0], "mock.wav", "Unexpected file name")
         self.assertEqual(fd[0][1], 16000, "Unexpected sample length")
         self.assertEqual(res[0].shape, (20, 32), "Invalid result array")
