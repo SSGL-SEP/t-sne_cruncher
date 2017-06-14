@@ -27,10 +27,6 @@ def get_edges(d, value_list, x_3d):
     return edges
 
 
-def generate_colors(max_value):
-    return {_get_color(i, max_value): False for i in range(max_value)}
-
-
 def select_colors(e, colors, tag_dict):
     if "color" in tag_dict[e.start] and "color" in tag_dict[e.end]:
         return
@@ -72,34 +68,34 @@ class Edge:
         self.weight = sqrt(sum([(sc[i]-ec[i])**2 for i in range(len(sc))]))
 
     def __lt__(self, other):
-        if type(self) != type(other):
-            raise TypeError("Can not compare {} to {}".format(type(self), type(other)))
+        self.type_check(other)
         return self.weight < other.weight
 
     def __le__(self, other):
-        if type(self) != type(other):
-            raise TypeError("Can not compare {} to {}".format(type(self), type(other)))
+        self.type_check(other)
         return self.weight <= other.weight
 
     def __gt__(self, other):
-        if type(self) != type(other):
-            raise TypeError("Can not compare {} to {}".format(type(self), type(other)))
+        self.type_check(other)
         return self.weight > other.weight
 
     def __ge__(self, other):
-        if type(self) != type(other):
-            raise TypeError("Can not compare {} to {}".format(type(self), type(other)))
+        self.type_check(other)
         return self.weight >= other.weight
 
     def __eq__(self, other):
-        if type(self) != type(other):
-            raise TypeError("Can not compare {} to {}".format(type(self), type(other)))
+        self.type_check(other)
         return self.weight == other.weight
+
+    def type_check(self, other):
+        if type(self) != type(other):
+            raise TypeError("Can not compare {} and {}".format(type(self), type(other)))
 
 
 class ColorData:
     def __init__(self, max_value):
         self.start_index = 0
+        self.assigned = 0
         self.colors = [_get_color(i, max_value) for i in range(max_value)]
         self.color_usages = {c: True for c in self.colors}
         self.color_indexes = {self.colors[i]: i for i in range(len(self.colors))}
@@ -110,14 +106,21 @@ class ColorData:
     def give(self, idx):
         c = self.colors[idx]
         self.color_usages[c] = False
+        self.assigned += 1
         return c
 
     def assign(self):
+        if self.assigned >= len(self.colors):
+            print("No more unique colors to assign. Something went wrong. Assigning #ffffff")
+            return "#ffffff"
         while not self.available(self.start_index):
             self.start_index += 1
         return self.give(self.start_index)
 
     def assign_distant(self, color):
+        if self.assigned >= len(self.colors):
+            print("No more unique colors to assign. Something went wrong. Assigning #ffffff")
+            return "#ffffff"
         c_count = len(self.colors)
         start_idx = self.color_indexes[color]
         idx = (start_idx + c_count // 2) % c_count
@@ -143,4 +146,6 @@ class ColorData:
                 return self.give(mi)
             if self.available(ma):
                 return self.give(ma)
+        # safety catch. The lines below should never get called.
+        print("No more unique colors to assign. Something went wrong. Assigning #ffffff")
         return "#ffffff"
