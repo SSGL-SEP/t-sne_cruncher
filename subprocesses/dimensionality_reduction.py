@@ -33,10 +33,7 @@ def t_sne(data: np.ndarray, no_dims: int = 3, args=None):
     else:
         l_nd = []
         for p in perplexity:
-            l_nd += t_sne_job((data, p, no_dims)), p
-    if args and args.output_file:
-        for x_nd in l_nd:
-            save_tsv(x_nd[0], insert_suffix(args.output_file, x_nd[1]))
+            l_nd.append(t_sne_job((data, p, no_dims)))
     return l_nd
 
 
@@ -51,7 +48,7 @@ def t_sne_job(params: tuple) -> tuple:
     """
     print("Running t-SNE with perplexity {}".format(params[1]))
     model = TSNE(n_components=params[2], perplexity=params[1], method='exact', verbose=2)
-    return model.fit_transform(params[0]), str(params[1]), params[1]
+    return model.fit_transform(params[0]), str(params[1])
 
 
 def pca(output_dimensions: int, data: np.ndarray, args):
