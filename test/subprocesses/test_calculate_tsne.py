@@ -2,7 +2,7 @@ from unittest import mock, TestCase
 import numpy
 import matplotlib.pyplot
 import subprocesses
-from subprocesses.calculate_tsne import t_sne, t_sne_job
+from subprocesses.dimensionality_reduction import t_sne, t_sne_job
 
 
 class TestCalculateTsne(TestCase):

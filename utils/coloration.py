@@ -14,6 +14,10 @@ def _get_color(i: int, max_value: int) -> str:
         int(max(0, min(rgb[2], 255))))
 
 
+def html_hex_to_rgb(input: str):
+    return int(input[1:3], 16)/255, int(input[3:5], 16)/255, int(input[5:], 16)/255
+
+
 def get_edges(d, value_list, x_3d):
     center_points = {}
     edges = []
