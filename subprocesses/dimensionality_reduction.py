@@ -60,7 +60,7 @@ def _get_colors(x_nd: np.ndarray, metadata: dict, color_by: str):
 def plot_results(x_nd: np.ndarray, output_file: str = os.path.join(os.getcwd(), 'prints.png'),
                  metadata: dict = None, color_by: str = None):
     fig_size = (16, 16)
-    point_size = 100
+    point_size = 20
 
     plt.figure(figsize=fig_size)
     x_coords = [x[0] for x in x_nd]

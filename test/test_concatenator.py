@@ -11,7 +11,7 @@ class TestMain(TestCase):
 
 class TestParseArguments(TestCase):
     def test_parse_arguments(self):
-        with mock.patch("builtins.open", mock.mock_open()) as mopen:
+        with mock.patch("audio_concatenator.open", mock.mock_open()) as mopen:
             with mock.patch("json.load") as mock_json_load:
                 # mopen.return_value = mock.MagicMock(spec=io.IOBase)
                 mock_json_load.return_value = {'points': [[0, 0, 0, 'xyz.wav']]}

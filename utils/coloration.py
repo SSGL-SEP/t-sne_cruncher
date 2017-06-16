@@ -37,32 +37,16 @@ def select_colors(e, colors, tag_dict):
         return
     elif "color" in tag_dict[e.start]:
         c = tag_dict[e.start]["color"]
-        try:
-            clr = colors.assign_distant(c)
-        except:
-            print("No assignment for {}. Using default\n\t{}".format(c, colors))
-            clr = "#ffffff"
+        clr = colors.assign_distant(c)
         tag_dict[e.end]["color"] = clr
     elif "color" in tag_dict[e.end]:
         c = tag_dict[e.end]["color"]
-        try:
-            clr = colors.assign_distant(c)
-        except:
-            print("No assignment for {}. Using default\n\t{}".format(c, colors))
-            clr = "#ffffff"
+        clr = colors.assign_distant(c)
         tag_dict[e.start]["color"] = clr
     else:
-        try:
-            c = colors.assign()
-        except:
-            print("No assignment. Using default\n\t{}".format(colors))
-            c = "#ffffff"
+        c = colors.assign()
         tag_dict[e.start]["color"] = c
-        try:
-            clr = colors.assign_distant(c)
-        except:
-            print("No assignment for {}. Using default\n\t".format(c, colors))
-            clr = "#ffffff"
+        clr = colors.assign_distant(c)
         tag_dict[e.end]["color"] = clr
 
 
@@ -122,7 +106,7 @@ class ColorData:
         self.assigned = 0
         self.colors = [_get_color(i, max_value) for i in range(max_value)]
         self.color_usages = {c: True for c in self.colors}
-        self.random_assing = False
+        self.random_assign = False
         if len(self.colors) != len(self.color_usages):
             self.random_assign = True
             nc = [self.colors[0]]
@@ -145,14 +129,23 @@ class ColorData:
         self.assigned += 1
         return c
 
+    @staticmethod
+    def default():
+        print("Could not find unique value. Returning default '#ffffff'")
+        return "#ffffff"
+
     def assign(self):
         if self.random_assign:
             return choice(self.colors)
+        if self.assigned >= len(self.colors):
+            return self.default()
         while not self.available(self.start_index):
             self.start_index += 1
         return self.give(self.start_index)
 
     def assign_distant(self, color):
+        if self.assigned >= len(self.colors):
+            return self.default()
         c_count = len(self.colors)
         start_idx = self.color_indexes[color]
         idx = (start_idx + c_count // 2) % c_count

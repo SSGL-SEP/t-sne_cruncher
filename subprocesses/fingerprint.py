@@ -5,15 +5,7 @@ from skimage.measure import block_reduce
 window = np.hanning(1024)
 
 
-def fingerprint_form_data(y: np.ndarray, sr: int, size: int):
-    """
-    Create fingerprint data from audio in numpy array.
-    
-    :param y: The numpy array containing audio data
-    :type y: numpy.ndarray
-    :return: Two-dimensional numpy array containing the fingerprint.
-    :rtype: numpy.ndarray
-    """
+def mfcc_fingerprint(y: np.ndarray, sr: int, size: int):
     s = librosa.stft(y, 1024, 4096, window=window)
     amp = np.abs(s)
     amp = block_reduce(amp, (10, 1), func=np.mean)

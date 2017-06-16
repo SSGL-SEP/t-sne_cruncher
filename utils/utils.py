@@ -61,14 +61,6 @@ def normalize(x: np.ndarray, min_value: int, max_value: int):
 
 
 def parse_metadata(args, index_dict: dict) -> dict:
-    """
-    Parse .csv file containing metadata into a dictionary.
-
-    :param file_path: .csv file to read
-    :type file_path: str
-    :return: Dictionary of metadata values.
-    :rtype: Dict{str: List[Dict{str: str}]}
-    """
     file_path = args.collect_metadata
     ignorables = args.tags_to_ignore
     unfilterables = args.unfilterables

@@ -1,5 +1,7 @@
 from unittest import mock, TestCase
+
 from utils import *
+from crunch import _arg_parse
 
 
 class TestParseMetadata(TestCase):
@@ -7,10 +9,11 @@ class TestParseMetadata(TestCase):
     def test_parse_metadata(self):
         with mock.patch("builtins.open", mock.mock_open()) as m:
             with mock.patch("csv.reader") as mock_csv_reader:
-                mock_csv_reader.return_value = [["a", "b", "c"], ["f.wav", "v", "y"]]
-                d = parse_metadata("path", {"f.wav": 0}, ["a", "c"], ["a"])
-                m.assert_called_with("path", "r")
-                self.assertFalse("a" in d, "'a' was not properly ignored")
+                args = _arg_parse().parse_args(["-c", "mock_location.csv", "-u", "c"])
+                mock_csv_reader.return_value = [["filename", "b", "c"], ["f.wav", "v", "y"]]
+                d = parse_metadata(args, {"f.wav": 0})
+                m.assert_called_with("mock_location.csv", "r")
+                self.assertFalse("filename" in d, "'filename' was not properly ignored")
 
                 self.assertTrue("b" in d)
                 self.assertTrue("__filterable" in d["b"], "'__filterable' not in 'a'")
