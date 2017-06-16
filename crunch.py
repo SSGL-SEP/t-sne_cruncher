@@ -37,8 +37,8 @@ def _arg_parse():
                                  "Default: None")
     arg_parser.add_argument("-d", "--duration", type=int, default=0,
                             help="Duration of sound samples (in milliseconds). Longer samples will be "
-                                 "truncated and shorter samples padded. Default: 0 to load entire sample")
-    arg_parser.add_argument("-u", "--unfilterables", type=str, nargs='*', default=["waveform", "name", "filename", "file name"],
+                                 "truncated and shorter samples may be padded. Default: 0 to load entire sample")
+    arg_parser.add_argument("-u", "--unfilterables", type=str, nargs='*', default=[],
                             help="List of tags that should not be used for filtering.")
     arg_parser.add_argument("-n", "--data_set", type=str, default="dataset",
                             help="Name of data set the samples are associated with. Default: 'dataset'")
@@ -47,11 +47,13 @@ def _arg_parse():
                                  "and compressed versions to use when streaming. Default: None")
     arg_parser.add_argument("-a", "--max_to_load", type=lambda x: abs(int(x)), default=0,
                             help="Maximum number of samples to load. Default: 0 to load all samples")
-    arg_parser.add_argument("-b", "--tags_to_ignore", type=str, nargs='*', default=["waveform", "name", "filename", "file name"],
+    arg_parser.add_argument("-b", "--tags_to_ignore", type=str, nargs='*',
+                            default=["waveform", "name", "filename", "file name"],
                             help="List of tags to completely ignore.")
-    arg_parser.add_argument("-k", "--reduction_method", type=str, choices=["tsne", "pca"], default="tsne",
+    arg_parser.add_argument("-k", "--reduction_method", type=str,
+                            choices=ProcessFunctions.dimensionality_reduction_dict.keys(), default="tsne",
                             help="Dimensionality reduction algorithm to use. Default: t-SNE")
-    arg_parser.add_argument("-g", "--fingerprint_method", type=str, choices=["fft", "mfcc", "tonnez", "chrome", "ms"],
+    arg_parser.add_argument("-g", "--fingerprint_method", type=str, choices=ProcessFunctions.fingerprint_dict.keys(),
                             default="ms", help="Fingerprinting algorithm to use. Default: ms (mel spectrogram).")
     arg_parser.add_argument("--td", help="Generates 2d data instead of the default 3d.", action="store_true")
     arg_parser.add_argument("--colorby", type=str, default=None,
@@ -61,7 +63,7 @@ def _arg_parse():
     return arg_parser
 
 
-def _finalize(x_nd: np.ndarray, args, data: list, metadata: dict) -> None:
+def _finalize(x_nd: tuple, args, data: list, metadata: dict) -> None:
     add_color(metadata, x_nd[0])
     if args.plot_output:
         plot_results(x_nd[0], insert_suffix(args.plot_output, x_nd[1]), metadata, args.colorby)
@@ -93,10 +95,10 @@ def _read_data_to_fingerprints(args) -> tuple:
     return results, file_data
 
 
-def _run_dimensionality_reduction(data, args):
+def _run_dimensionality_reduction(data, args, file_data, metadata):
     output_dimensions = 2 if args.td else 3
     reduction_function = ProcessFunctions.dimensionality_reduction_dict[args.reduction_method]
-    return reduction_function(data, output_dimensions, args)
+    return reduction_function(data, output_dimensions, args, a_func=_finalize, a_params=(args, file_data, metadata))
 
 
 def main(args):
@@ -109,16 +111,16 @@ def main(args):
     t = time.time()
     results, file_data = _read_data_to_fingerprints(args)
     results = np.asarray(results).astype(np.float64)
+    print("Read and fingerprinted {} files.".format(len(file_data)))
     if len(results.shape) > 2:
         results = results.reshape(len(results), -1)
     if args.fingerprint_output:
         np.save(args.fingerprint_output, results)
+        print("Wrote fingerprint data to {}.".format(args.fingerprint_output))
     metadata = {}
     if args.collect_metadata:
         metadata = parse_metadata(args, {file_data[i][0].split('/')[-1]: i for i in range(len(file_data))})
-    l_nd = _run_dimensionality_reduction(results, args)
-    for x_nd in l_nd:
-        _finalize(x_nd, args, file_data, metadata)
+    _run_dimensionality_reduction(results, args, file_data, metadata)
     print("Crunching completed in ", int(time.time() - t), " seconds")
 
 
@@ -126,6 +128,7 @@ def output(file_path: str, data: list, x_nd: np.ndarray, args, metadata, suffix:
     data_list = collect(data, x_nd, metadata, args, suffix)
     with open(file_path, 'w') as outfile:
         json.dump(data_list, outfile, indent=4, separators=(',', ':'))
+    print("Wrote data to {}.".format(file_path))
 
 
 def _make_header(args, point_count, suffix: str):
@@ -146,8 +149,7 @@ def collect(data: list, x_nd: np.ndarray, metadata: dict, args, suffix: str) -> 
 
 
 class ProcessFunctions:
-    fingerprint_dict = {"mfcc": mfcc_fingerprint, "fft": fingerprint_form_data,
-                        "tonnez": tonnez_fingerprint, "chroma": chroma_fingerprint,
+    fingerprint_dict = {"fft": fingerprint_form_data, "chroma": chroma_fingerprint,
                         "ms": ms_fingerprint}
 
     dimensionality_reduction_dict = {"pca": pca, "tsne": t_sne}

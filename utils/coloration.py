@@ -1,5 +1,6 @@
 import colorsys
 from math import sqrt
+from random import choice
 
 import numpy
 
@@ -14,8 +15,8 @@ def _get_color(i: int, max_value: int) -> str:
         int(max(0, min(rgb[2], 255))))
 
 
-def html_hex_to_rgb(input: str):
-    return int(input[1:3], 16)/255, int(input[3:5], 16)/255, int(input[5:], 16)/255
+def html_hex_to_rgb(input_html: str):
+    return int(input_html[1:3], 16) / 255, int(input_html[3:5], 16) / 255, int(input_html[5:], 16) / 255
 
 
 def get_edges(d, value_list, x_3d):
@@ -36,14 +37,33 @@ def select_colors(e, colors, tag_dict):
         return
     elif "color" in tag_dict[e.start]:
         c = tag_dict[e.start]["color"]
-        tag_dict[e.end]["color"] = colors.assign_distant(c)
+        try:
+            clr = colors.assign_distant(c)
+        except:
+            print("No assignment for {}. Using default\n\t{}".format(c, colors))
+            clr = "#ffffff"
+        tag_dict[e.end]["color"] = clr
     elif "color" in tag_dict[e.end]:
         c = tag_dict[e.end]["color"]
-        tag_dict[e.start]["color"] = colors.assign_distant(c)
+        try:
+            clr = colors.assign_distant(c)
+        except:
+            print("No assignment for {}. Using default\n\t{}".format(c, colors))
+            clr = "#ffffff"
+        tag_dict[e.start]["color"] = clr
     else:
-        c = colors.assign()
+        try:
+            c = colors.assign()
+        except:
+            print("No assignment. Using default\n\t{}".format(colors))
+            c = "#ffffff"
         tag_dict[e.start]["color"] = c
-        tag_dict[e.end]["color"] = colors.assign_distant(c)
+        try:
+            clr = colors.assign_distant(c)
+        except:
+            print("No assignment for {}. Using default\n\t".format(c, colors))
+            clr = "#ffffff"
+        tag_dict[e.end]["color"] = clr
 
 
 def _color_by_tag(d: dict, tag: str, x_3d: numpy.ndarray) -> None:
@@ -102,6 +122,16 @@ class ColorData:
         self.assigned = 0
         self.colors = [_get_color(i, max_value) for i in range(max_value)]
         self.color_usages = {c: True for c in self.colors}
+        self.random_assing = False
+        if len(self.colors) != len(self.color_usages):
+            self.random_assign = True
+            nc = [self.colors[0]]
+            for i in range(1, len(self.colors)):
+                c = self.colors[i]
+                if c == nc[0] or c == nc[-1]:
+                    continue
+                nc.append(c)
+            self.colors = nc
         self.color_indexes = {self.colors[i]: i for i in range(len(self.colors))}
 
     def available(self, idx):
@@ -109,22 +139,20 @@ class ColorData:
 
     def give(self, idx):
         c = self.colors[idx]
+        if self.random_assign:
+            return c
         self.color_usages[c] = False
         self.assigned += 1
         return c
 
     def assign(self):
-        if self.assigned >= len(self.colors):
-            print("No more unique colors to assign. Something went wrong. Assigning #ffffff")
-            return "#ffffff"
+        if self.random_assign:
+            return choice(self.colors)
         while not self.available(self.start_index):
             self.start_index += 1
         return self.give(self.start_index)
 
     def assign_distant(self, color):
-        if self.assigned >= len(self.colors):
-            print("No more unique colors to assign. Something went wrong. Assigning #ffffff")
-            return "#ffffff"
         c_count = len(self.colors)
         start_idx = self.color_indexes[color]
         idx = (start_idx + c_count // 2) % c_count
@@ -153,3 +181,10 @@ class ColorData:
         # safety catch. The lines below should never get called.
         print("No more unique colors to assign. Something went wrong. Assigning #ffffff")
         return "#ffffff"
+
+    def __str__(self):
+        return """Current index: {}. Colors assigned: {}. Total colors {}.
+        Colors: {}
+        Usages: {}
+        Indexes: {}""".format(self.start_index, self.assigned, len(self.colors),
+                              self.colors, self.color_usages, self.color_indexes)

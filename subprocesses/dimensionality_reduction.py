@@ -10,50 +10,36 @@ from sklearn.decomposition import PCA
 from utils import *
 
 
-def save_tsv(data: np.ndarray, file_name: str):
-    """
-    Save reduced data to a specified .tsv file.
-    
-    :param data: 2-dimensional numpy array containing reduced data
-    :type data: numpy.ndarray
-    :param file_name: File name of file to write
-    :type file_name: str
-    """
-    np.savetxt(file_name, data, fmt="%.5f", delimiter="\t")
-
-
-def t_sne(data: np.ndarray, no_dims: int = 3, args=None):
+def t_sne(data: np.ndarray, no_dims: int = 3, args=None, a_func=None, a_params=None):
     if args:
         perplexity = args.perplexity
     else:
         perplexity = [30]
     if args and args.parallel:
         with Pool() as p:
-            l_nd = list(p.map(t_sne_job, [(data, x, no_dims) for x in perplexity]))
+            l_nd = list(p.map(t_sne_job, [(data, x, no_dims, a_func, a_params) for x in perplexity]))
     else:
         l_nd = []
         for p in perplexity:
-            l_nd.append(t_sne_job((data, p, no_dims)))
+            l_nd.append(t_sne_job((data, p, no_dims, a_func, a_params)))
     return l_nd
 
 
 def t_sne_job(params: tuple) -> tuple:
-    """
-    run r_sne fit transform on specified data in a specified way
-
-    :param params: tuple of data, perplexity, output dimension
-    :type params: tuple(numpy.ndarray, int, int)
-    :return: typle of reduced data and perplexity
-    :rtype: tuple(numpy.ndarray, str)
-    """
     print("Running t-SNE with perplexity {}".format(params[1]))
     model = TSNE(n_components=params[2], perplexity=params[1], method='exact', verbose=2)
-    return model.fit_transform(params[0]), str(params[1])
+    x_nd = model.fit_transform(params[0]), str(params[1])
+    if len(params) >= 5 and params[3] and params[4]:
+        params[3](x_nd, *params[4])
+    return x_nd
 
 
-def pca(output_dimensions: int, data: np.ndarray, args):
+def pca(data: np.ndarray, output_dimensions: int, args=None, a_func=None, a_params=None):
     model = PCA(n_components=output_dimensions, svd_solver='full')
-    return model.fit_transform(data), "pca"
+    x_nd = model.fit_transform(data), "pca"
+    if a_func and a_params:
+        a_func(x_nd, *a_params)
+    return x_nd
 
 
 def _get_colors(x_nd: np.ndarray, metadata: dict, color_by: str):
@@ -84,3 +70,4 @@ def plot_results(x_nd: np.ndarray, output_file: str = os.path.join(os.getcwd(), 
     plt.tight_layout()
     plt.savefig(output_file)
     plt.close()
+    print("Wrote plot to {}.".format(output_file))
