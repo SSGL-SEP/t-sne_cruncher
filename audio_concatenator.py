@@ -13,7 +13,7 @@ def _parse_arguments():
     parser.add_argument("-i", "--input", default='.', help='Folder path of sound files')
     parser.add_argument("-o", "--output", default='concatenated_sounds.blob', help='Name of output file')
 
-    return parser.parse_args()
+    return parser
 
 
 def main(args):
@@ -31,4 +31,4 @@ def main(args):
 
 
 if __name__ is '__main__':
-    main(_parse_arguments())
+    main(_parse_arguments().parse_args())
