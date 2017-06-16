@@ -1,5 +1,3 @@
-import os
-from multiprocessing import Pool
 import numpy as np
 import librosa
 from skimage.measure import block_reduce
@@ -7,28 +5,7 @@ from skimage.measure import block_reduce
 window = np.hanning(1024)
 
 
-def fingerprint_from_file_data(source_npy: str = (os.path.join(os.getcwd(), 'samples.npy')),
-                               target_npy_file: str = None):
-    """
-    Read data from a specified .npy file and create a fingerprint.
-    
-    :param source_npy: Source .npy file to read from
-    :type source_npy: str
-    :param target_npy_file: Optional .npy target file to write results to 
-    :type target_npy_file: str
-    :return: Three-dimensional numpy array with audio fingerprints.
-    :rtype: numpy.ndarray
-    """
-    samples = np.load(source_npy)
-    with Pool() as p:
-        fingerprints = p.map(fingerprint_form_data, samples)
-    fingerprints = np.asarray(fingerprints).astype(np.float32)
-    if target_npy_file:
-        np.save(target_npy_file, fingerprints)
-    return fingerprints
-
-
-def fingerprint_form_data(y: np.ndarray):
+def fingerprint_form_data(y: np.ndarray, sr: int, size: int):
     """
     Create fingerprint data from audio in numpy array.
     
@@ -50,27 +27,17 @@ def fingerprint_form_data(y: np.ndarray):
     return amp
 
 
-def ms_fingerprint(tup: tuple):
-    return librosa.feature.melspectrogram(y=tup[0], sr=tup[1])
+def ms_fingerprint(data: np.ndarray, sr: int, size: int):
+    steps = 25
+    hop = size//steps
+    return librosa.feature.melspectrogram(y=data, sr=sr, hop_length=hop)
 
 
-def tonnez_fingerprint(tup: tuple):
-    return librosa.feature.tonnetz(y=tup[0].astype(np.float64), sr=tup[1])
+def tonnez_fingerprint(data: np.ndarray, sr: int, size: int):
+    return librosa.feature.tonnetz(y=data.astype(np.float64), sr=sr)
 
 
-def chroma_fingerprint(tup: tuple):
-    return librosa.feature.chroma_stft(y=tup[0], sr=tup[1])
-
-
-def mfcc_fingerprint(tup: tuple):
-    """
-
-    :param tup: tuple containing audio data and sample rate
-    :type tup: tuple(numpy.ndarray, int)
-    :return: mfcc fingerprint
-    :rtype: numpy.ndarray
-    """
-    return librosa.feature.mfcc(y=tup[0], sr=tup[1])
-
-if __name__ == "__main__":
-    fingerprint_from_file_data(target_npy_file=os.path.join(os.getcwd(), 'fingerprints.npy'))
+def chroma_fingerprint(data: np.ndarray, sr: int, size: int):
+    steps = 25
+    hop = size//steps
+    return librosa.feature.chroma_stft(y=data, sr=sr, hop_length=hop)
