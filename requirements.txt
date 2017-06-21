@@ -1,7 +1,7 @@
 numpy
 scipy
-librosa
 matplotlib
+librosa
 scikit-image
 scikit-learn
 coverage
