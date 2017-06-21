@@ -35,6 +35,7 @@ class TestMain(TestCase):
                                  "Unexpected values in tags_to_ignore.")
         self.assertEqual(args.reduction_method, "tsne", "Unexpected value for reduction_method.")
         self.assertEqual(args.fingerprint_method, "ms", "Unexpected value for fingerprint_mathod.")
+        self.assertIsNone(args.fingerprint_input, "Unexpected value for fingerprint input.")
         self.assertFalse(args.td, "Unexpected value for --td")
         self.assertIsNone(args.colorby, "Unexpected colorby value")
         self.assertFalse(args.parallel, "Unexpected value for parallel.")
@@ -44,8 +45,8 @@ class TestMain(TestCase):
         args = ap.parse_args(args=["-f", "samp/", "-p", "20", "50", "60", "-o", "pca.json", "-r", "fing.npy",
                                    "-m", "-100", "-x", "100", "-t", "pca.png", "-c", "samp/data.csv", "-d", "4000",
                                    "-u", "unfilterable", "-n", "test_data_set", "-s", "sound_info.json", "-a", "1000",
-                                   "-b", "pronunciation", "-k", "pca", "-g", "fft", "--td", "--colorby", "phoneme",
-                                   "--parallel"])
+                                   "-b", "pronunciation", "-k", "pca", "-g", "fft", "-e", "input.npy", "--td",
+                                   "--colorby", "phoneme", "--parallel"])
         self.assertEqual(args.input_folder, "samp/", "Unexpected input folder")
         self.assertSequenceEqual(args.perplexity, [20, 50, 60], "Unexpected perplexity list")
         self.assertEqual(args.output_file, "pca.json", "Unexpected output directory")
@@ -62,6 +63,7 @@ class TestMain(TestCase):
         self.assertSequenceEqual(args.tags_to_ignore, ["pronunciation"], "Unexpected tags_to_ignore value.")
         self.assertEqual(args.reduction_method, "pca", "Unexpected reduction method value.")
         self.assertEqual(args.fingerprint_method, "fft", "Unexpected fingerprint_method.")
-        self.assertEqual(args.td, True, "Unexpected value for --td")
+        self.assertEqual(args.fingerprint_input, "input.npy", "Unexpected value for fingerprint input.")
+        self.assertTrue(args.td, "Unexpected value for --td")
         self.assertEqual(args.colorby, "phoneme", "Unexpected colorby value")
         self.assertTrue(args.parallel, "Unexpected value for parallel.")

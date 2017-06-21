@@ -1,18 +1,24 @@
 import os
 import errno
 import csv
+from typing import List, Dict, TypeVar, Any
+from argparse import Namespace
 
 import numpy as np
 
 
-def all_files(folder_path: str, exts: list):
+T = TypeVar("T")
+
+
+def all_files(folder_path: str, exts: List[str]) -> str:
     """
-    Gathers all files conforming to provided extensions.
+    Gather all files conforming to provided extensions.
 
     :param folder_path: Path to folder
     :type folder_path: str
     :param exts: list of file extensions to accept
     :type exts: List[str]
+    :rtype: Union[str, None]
     """
     for root, dirs, files in os.walk(folder_path):
         for f in files:
@@ -41,7 +47,7 @@ def mkdir_p(path: str):
             raise
 
 
-def normalize(x: np.ndarray, min_value: int, max_value: int):
+def normalize(x: np.ndarray, min_value: int, max_value: int) -> np.ndarray:
     """
     Normalize values in given numpy array to be between 2 given values.
 
@@ -54,13 +60,22 @@ def normalize(x: np.ndarray, min_value: int, max_value: int):
     :return: Normalized numpy array
     :rtype: numpy.ndarray
     """
-    x -= min([min(y) for y in x])
-    x /= (max([max(y) for y in x]) / (max_value - min_value))
+    x -= x.min()
+    x /= (x.max() / (max_value - min_value))
     x += min_value
     return x
 
 
-def parse_metadata(args, index_dict: dict) -> dict:
+def parse_metadata(args: Namespace, index_dict: Dict[str, int]) -> Dict[str, dict]:
+    """
+    Generate metadata dictionary based on csv.
+    :param args: Command line arguments
+    :type args: argparse.Namespace
+    :param index_dict: Dictionary mapping file name to index.
+    :type index_dict: Dict[str, int]
+    :return: Metadata Dictionary
+    :rtype: Dict[str, Dict[str, bool]]
+    """
     file_path = args.collect_metadata
     ignorables = args.tags_to_ignore
     unfilterables = args.unfilterables
@@ -85,16 +100,20 @@ def parse_metadata(args, index_dict: dict) -> dict:
     return d
 
 
-def _parse_row(d: dict, h: list, row: list, index_dict: dict, ignorables: list) -> None:
+def _parse_row(d: Dict[str, Any], h: List[str], row: List[str], index_dict: Dict[str, int], ignorables: List[str]) -> None:
     """
-    Add csv row data to dictionary
+    Add csv row data to dictionary.
 
-    :param d: dictionary to add data to
-    :type d: Dict[str, List[Dict[str, str]]]
-    :param h: list of header data
+    :param d: Dictionary of tags
+    :type d: Dict[str, Dict]
+    :param h: List of column headers
     :type h: List[str]
-    :param row: data to add to dictionary
+    :param row: List of row values
     :type row: List[str]
+    :param index_dict: Dictionary mapping file names to index
+    :type index_dict: Dict[str, int]
+    :param ignorables: List of tag types to ignore.
+    :type ignorables: List[str]
     """
     if row[0] not in index_dict:
         return
@@ -110,7 +129,7 @@ def _parse_row(d: dict, h: list, row: list, index_dict: dict, ignorables: list) 
 
 def insert_suffix(file_path: str, suffix: str) -> str:
     """
-    Insert suffix into file path foo/bar.json, _1 -> foo/bar_1.json
+    Insert suffix into file path eg. foo/bar.json, _1 -> foo/bar_1.json
 
     :param file_path: file path to insert suffix into
     :type file_path: str
@@ -124,17 +143,38 @@ def insert_suffix(file_path: str, suffix: str) -> str:
 
 
 class UnionFind:
-    def __init__(self, items):
+    def __init__(self, items: List[T]):
+        """
+        Create instance of UnionFind
+        :param items: List of "nodes"
+        :type items: List[T]
+        """
         self.parents = {i: i for i in items}
         self.sizes = {i: 1 for i in items}
         self.components = len(items)
 
-    def find(self, a, b):
+    def find(self, a: T, b: T) -> bool:
+        """
+        Find out if objects a and b are in the same subset.
+        :param a: An instance of T in UnionFind
+        :type a: T
+        :param b: Another instance of T in UnionFind
+        :type b: T
+        :return: True if both objects are in the same subset.
+        :rtype: bool
+        """
         if (a not in self.parents) or (b not in self.parents):
             raise ValueError("{} or {} not present in union-find structure".format(a, b))
         return self[a] == self[b]
 
-    def root(self, item):
+    def root(self, item: T) -> T:
+        """
+        Find root of subset that item is in.
+        :param item: item to find root of.
+        :type item: T
+        :return: Root of set that item is in.
+        :rtype: T
+        """
         child = item
         item = self.parents[item]
         while item != child:
@@ -143,7 +183,16 @@ class UnionFind:
             item = self.parents[item]
         return item
 
-    def union(self, a, b):
+    def union(self, a: T, b: T) -> bool:
+        """
+        Combine subsets of a and b.
+        :param a: An object in UnionFind
+        :type a: T
+        :param b: Another object in UnionFind
+        :type b: T
+        :return: True if a union was made.
+        :rtype: bool
+        """
         if (a not in self.parents) or (b not in self.parents):
             raise ValueError("{} or {} not present in union-find structure".format(a, b))
         a = self[a]
@@ -159,5 +208,5 @@ class UnionFind:
         self.components -= 1
         return True
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: T) -> T:
         return self.root(item)

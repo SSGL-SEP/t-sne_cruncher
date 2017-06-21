@@ -1,8 +1,9 @@
 import json
 import os
 import time
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from multiprocessing import Pool
+from typing import Tuple, List, Dict, Any, Union
 
 import numpy as np
 
@@ -10,12 +11,12 @@ from subprocesses import *
 from utils import *
 
 
-def _arg_parse():
+def _arg_parse() -> ArgumentParser:
     """
     Provides a command line argument parser object.
     
     :return: Argument parser for cruncher.py
-    :rtype: argparse.ArgumentParser
+    :rtype: ArgumentParser
     """
     arg_parser = ArgumentParser()
     arg_parser.add_argument("-f", "--input_folder", type=str, default=os.getcwd(),
@@ -55,6 +56,8 @@ def _arg_parse():
                             help="Dimensionality reduction algorithm to use. Default: t-SNE")
     arg_parser.add_argument("-g", "--fingerprint_method", type=str, choices=ProcessFunctions.fingerprint_dict.keys(),
                             default="ms", help="Fingerprinting algorithm to use. Default: ms (mel spectrogram).")
+    arg_parser.add_argument("-e", "--fingerprint_input", type=str, default=None,
+                            help="Read fingerprints form file instead fo generating them. Default: None.")
     arg_parser.add_argument("--td", help="Generates 2d data instead of the default 3d.", action="store_true")
     arg_parser.add_argument("--colorby", type=str, default=None,
                             help="Tag to do default coloring by.")
@@ -63,7 +66,19 @@ def _arg_parse():
     return arg_parser
 
 
-def _finalize(x_nd: tuple, args, data: list, metadata: dict) -> None:
+def _finalize(x_nd: Tuple[np.ndarray, str], args: Namespace, data: List[str], metadata: Dict[str, dict]) -> None:
+    """
+    Add coloration to the metadata and output files.
+
+    :param x_nd: Pairs of arrays of reduced 3d or 2d vectors and identifiers
+    :type x_nd: Tuple[numpy.ndarray, str]
+    :param args: command line argument namespace
+    :type args: argparse.Namespace
+    :param data: List of file paths.
+    :type data: List[str]
+    :param metadata: Metadata dictionary
+    :type metadata: Dict[str, Dict[str, bool]]
+    """
     add_color(metadata, x_nd[0])
     if args.plot_output:
         plot_results(x_nd[0], insert_suffix(args.plot_output, x_nd[1]), metadata, args.colorby)
@@ -71,9 +86,17 @@ def _finalize(x_nd: tuple, args, data: list, metadata: dict) -> None:
     output(insert_suffix(args.output_file, x_nd[1]), data, norm_data, args, metadata, x_nd[1])
 
 
-def _read_and_fingerprint(tup: tuple):
-    file_path = tup[0]
-    args = tup[1]
+def _read_and_fingerprint(file_path: str, args: Namespace) -> Tuple[np.ndarray, str, int]:
+    """
+    Read audio data from file and fingerprint it with specified fingerprint algorithm.
+
+    :param file_path: Path to file to read.
+    :type file_path: str
+    :param args: Command line arguments.
+    :type args: argparse.Namespace
+    :return: Tuple containing fingerprint data, file path and audio length
+    :rtype: Tuple[numpy.ndarray, str, int]
+    """
     fingerprint_function = ProcessFunctions.fingerprint_dict[args.fingerprint_method]
     data = load_sample(file_path, args.duration)
     result = fingerprint_function(data[1], data[3], data[2])
@@ -81,27 +104,82 @@ def _read_and_fingerprint(tup: tuple):
     return result, data[0], data[2]
 
 
-def _read_data_to_fingerprints(args) -> tuple:
+def _read_data_to_fingerprints(args: Namespace) -> Tuple[List[np.ndarray], List[str]]:
     """
-    Read audio files and generate fingerprint data
+    Read audio files and generate fingerprint data asynchronously based on command line arguments.
+
+    :param args: Command line arguments.
+    :type args: argparse.Namespace
+    :return: Tuple with list of fingerprint data and a list of file paths.
+    :rtype: Tuple[List[numpy.ndarray], List[str]]]
 
     """
     file_list = list(all_files(args.input_folder, [".wav"]))
     max_to_read = min(len(file_list), args.max_to_load) if args.max_to_load else len(file_list)
     with Pool() as p:
-        data = p.map(_read_and_fingerprint, [(f, args) for f in file_list[:max_to_read]])
+        data = p.starmap(_read_and_fingerprint, [(f, args) for f in file_list[:max_to_read]])
     results = [x[0] for x in data]
-    file_data = [(x[1], x[2]) for x in data]
+    file_data = [x[1] for x in data]
     return results, file_data
 
 
-def _run_dimensionality_reduction(data, args, file_data, metadata):
+def _run_dimensionality_reduction(data: List[np.ndarray], args: Namespace, file_data: List[str],
+                                  metadata: Dict[str, dict]) -> List[Tuple[np.ndarray, str]]:
+    """
+    Run 3d or 2d dimensionality reduction on data
+
+    :param data: data to run dimensionality reduction on.
+    :type data: numpy.ndarray
+    :param args: Command line arguments
+    :type args: argparse.Namespace
+    :param file_data: List of file paths.
+    :type file_data: List[str]
+    :param metadata: Metadata dictionary
+    :type metadata: Dict[str, Dict[str, bool]]
+    :return: List of tuples of reduced data and descriptor strings.
+    :rtype: List[Tuple[numpy.ndarray, str]]
+    """
     output_dimensions = 2 if args.td else 3
     reduction_function = ProcessFunctions.dimensionality_reduction_dict[args.reduction_method]
     return reduction_function(data, output_dimensions, args, a_func=_finalize, a_params=(args, file_data, metadata))
 
 
-def main(args):
+def load_fingerprints(args: Namespace) -> Tuple[List[np.ndarray], List[str]]:
+    """
+    Read previously calculated fingerprint data from file.
+
+    :param args: Command line arguments
+    :type args: argparse.Namespace
+    :return: Tuple of a list of fingerprint data and list of paths.
+    :rtype: Tuple[List[numpy.ndarray], List[str]]
+    """
+    data = np.load(args.fingerprint_input)
+    results = [c[0] for c in data]
+    file_data = [c[1] for c in data]
+    return results, file_data
+
+
+def generate_fingerprints(args: Namespace) -> Tuple[List[np.ndarray], List[str]]:
+    """
+    Generate fingerprints form wave files and optionally saves them to disk.
+
+    :param args: Command line arguments.
+    :type args: argparse.Namespace
+    :return: Tuple of a list of fingerprint data and list of file paths.
+    :rtype: Tuple[List[np.ndarray], List[str]]
+    """
+    results, file_data = _read_data_to_fingerprints(args)
+    results = np.asarray(results).astype(np.float64)
+    print("Read and fingerprinted {} files.".format(len(file_data)))
+    if len(results.shape) > 2:
+        results = results.reshape(len(results), -1)
+    if args.fingerprint_output:
+        np.save(args.fingerprint_output, [(results[i], file_data[i]) for i in range(len(results))])
+        print("Wrote fingerprint data to {}.".format(args.fingerprint_output))
+    return results, file_data
+
+
+def main(args: Namespace) -> None:
     """
     Run analysis and reduction based on command line parameters
 
@@ -109,47 +187,85 @@ def main(args):
     :type args: argparse.Namespace
     """
     t = time.time()
-    results, file_data = _read_data_to_fingerprints(args)
-    results = np.asarray(results).astype(np.float64)
-    print("Read and fingerprinted {} files.".format(len(file_data)))
-    if len(results.shape) > 2:
-        results = results.reshape(len(results), -1)
-    if args.fingerprint_output:
-        np.save(args.fingerprint_output, results)
-        print("Wrote fingerprint data to {}.".format(args.fingerprint_output))
+    results, file_data = load_fingerprints(args) if args.fingerprint_input else generate_fingerprints(args)
     metadata = {}
     if args.collect_metadata:
-        metadata = parse_metadata(args, {file_data[i][0].split('/')[-1]: i for i in range(len(file_data))})
+        metadata = parse_metadata(args, {file_data[i].split('/')[-1]: i for i in range(len(file_data))})
     _run_dimensionality_reduction(results, args, file_data, metadata)
     print("Crunching completed in ", int(time.time() - t), " seconds")
 
 
-def output(file_path: str, data: list, x_nd: np.ndarray, args, metadata, suffix: str) -> None:
+def output(file_path: str, data: List[str], x_nd: np.ndarray, args: Namespace,
+           metadata: Dict[str, dict], suffix: str) -> None:
+    """
+    Output results of dimensionality reduction.
+
+    :param file_path: File to write to
+    :type file_path: str
+    :param data: List of file paths.
+    :type data: List[str]
+    :param x_nd: collection of 3d or 2d data to output.
+    :type x_nd: numpy.ndarray
+    :param args: Command line arguments
+    :type args: argparse.Namespace
+    :param metadata: metadata dictionaty
+    :type metadata: Dict[str, Dict[str, bool]]
+    :param suffix: reduction suffix to append to the processing method field.
+    :type suffix: str
+    """
     data_list = collect(data, x_nd, metadata, args, suffix)
     with open(file_path, 'w') as outfile:
         json.dump(data_list, outfile, indent=4, separators=(',', ':'))
     print("Wrote data to {}.".format(file_path))
 
 
-def _make_header(args, point_count, suffix: str):
+def _make_header(args: Namespace, point_count: int, suffix: str) -> Dict[str, Any]:
+    """
+    Generate header data for output
+    :param args: Command line arguments
+    :type args: argparse.Namespace
+    :param point_count: Number of total points in sample set
+    :type point_count: int
+    :param suffix: reduction suffix to append to the processing method field.
+    :type suffix: str
+    :return: Dictionary containing header data to be written to file.
+    :rtype: Dict[str, NoneType]
+    """
     return {"soundInfo": args.sound_info, "dataSet": args.data_set,
             "processingMethod": "{} - {}, {}".format(args.fingerprint_method, args.reduction_method, suffix),
             "colorBy": args.colorby, "totalPoints": point_count}
 
 
-def collect(data: list, x_nd: np.ndarray, metadata: dict, args, suffix: str) -> dict:
+def collect(data: List[str], x_nd: np.ndarray, metadata: Dict[str, dict], args: Namespace,
+            suffix: str) -> Dict[str, Union[dict, str]]:
+    """
+    Generate data dictionary to be written to json.
+
+    :param data: List of file paths.
+    :type data: List[str]
+    :param x_nd: Numpy array containing 2d or 3d data.
+    :type x_nd: numpy.ndarray
+    :param metadata: Dictionary of tag data associated with the samples
+    :type metadata: Dict[str, Dict[str, bool]]
+    :param args: Command line arguments
+    :type args: argparse.Namespace
+    :param suffix: reduction specific suffix
+    :type suffix: str
+    :return: Dictionary ready to be written to json.
+    :rtype: Dict[str, NoneType]
+    """
     out_data = _make_header(args, len(data), suffix)
     out_data["tags"] = metadata
     lst = []
     for i in range(len(data)):
-        fn = data[i][0].split("/")[-1]
+        fn = data[i].split("/")[-1]
         lst.append([x_nd[i][0], x_nd[i][1], 0 if len(x_nd[i]) < 3 else x_nd[i][2], fn])
     out_data["points"] = lst
     return out_data
 
 
 class ProcessFunctions:
-    fingerprint_dict = {"fft": mfcc_fingerprint, "chroma": chroma_fingerprint,
+    fingerprint_dict = {"fft": fft_fingerprint, "chroma": chroma_fingerprint,
                         "ms": ms_fingerprint}
 
     dimensionality_reduction_dict = {"pca": pca, "tsne": t_sne}
