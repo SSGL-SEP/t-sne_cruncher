@@ -1,8 +1,8 @@
-scikit-learn
 numpy
 scipy
 librosa
 matplotlib
 scikit-image
+scikit-learn
 coverage
 codecov
