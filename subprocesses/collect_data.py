@@ -1,4 +1,3 @@
-"""This module provides functionality to create numpy data arrays form wave files."""
 from typing import Tuple
 
 import numpy as np

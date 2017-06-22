@@ -1,4 +1,3 @@
-"""Provides functions for performing a t-SNE reduction on audio fingerprint data"""
 import os
 from multiprocessing.pool import Pool
 from argparse import Namespace
@@ -30,10 +29,7 @@ def t_sne(data: np.ndarray, no_dims: int = 3, args: Namespace = None,
     :return: List of tuples containing dimensionally reduced data and perplexity string.
     :rtype: List[Tuple[numpy.ndarray, str]]
     """
-    if args:
-        perplexity = args.perplexity
-    else:
-        perplexity = [30]
+    perplexity = args.perplexity if args else [30]
     if args and args.parallel:
         with Pool() as p:
             l_nd = list(p.starmap(_t_sne_job, [(data, x, no_dims, a_func, a_params) for x in perplexity]))
@@ -93,10 +89,10 @@ def pca(data: np.ndarray, output_dimensions: int, args: Namespace = None,
     return [x_nd]
 
 
-def _get_colors(x_nd: np.ndarray, metadata: Dict[str, Any], color_by: str) \
-        -> List[Union[int, Tuple[float, float, float]]]:
+def _get_colors(x_nd: np.ndarray, metadata: Dict[str, Any] = None,
+                color_by: str = None) -> List[Union[int, Tuple[float, float, float]]]:
     """
-    Map points to colors
+    Map points to colors based on metadata or manhattan distance from origin.
     :param x_nd: dimensionally reduced data
     :type x_nd: numpy.ndarray
     :param metadata: Metadata dictionary containing coloration data.
