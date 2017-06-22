@@ -1,6 +1,4 @@
 from unittest import mock, TestCase
-import io
-import struct
 
 import audio_concatenator
 

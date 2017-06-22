@@ -36,5 +36,5 @@ def main(args):
             _write_to_file(output_file, file)
 
 
-if __name__ is '__main__':
+if __name__ == '__main__':
     main(_parse_arguments().parse_args())
