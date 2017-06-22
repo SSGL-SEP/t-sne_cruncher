@@ -16,19 +16,25 @@ def _parse_arguments():
     return parser
 
 
-def main(args):
-    with open(args.json) as file:
+def _read_points(json_path):
+    with open(json_path) as file:
         data = json.load(file)
-
-    output_file = open(args.output, 'wb')
-
-    for point in data['points']:
-        file = args.input + '/' + splitext(point[3])[0] + '.' + args.ext
-        b = getsize(file)
-        output_file.write(struct.pack('I', b))
-        f = open(file, 'rb')
-        output_file.write(f.read())
+    return data["points"]
 
 
-if __name__ is '__main__':
+def _write_to_file(output_file, file):
+    b = getsize(file)
+    output_file.write(struct.pack('I', b))
+    with open(file, 'rb') as input_file:
+        output_file.write(input_file.read())
+
+
+def main(args):
+    with open(args.output, 'wb') as output_file:
+        for point in _read_points(args.json):
+            file = args.input + '/' + splitext(point[3])[0] + '.' + args.ext
+            _write_to_file(output_file, file)
+
+
+if __name__ == '__main__':
     main(_parse_arguments().parse_args())
