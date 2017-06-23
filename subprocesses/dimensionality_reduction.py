@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 from utils import *
 
@@ -30,6 +31,8 @@ def t_sne(data: np.ndarray, no_dims: int = 3, args: Namespace = None,
     :rtype: List[Tuple[numpy.ndarray, str]]
     """
     perplexity = args.perplexity if args else [30]
+    print("Scaling data.")
+    data = StandardScaler().fit_transform(data)
     if args and args.parallel:
         with Pool() as p:
             l_nd = list(p.starmap(_t_sne_job, [(data, x, no_dims, a_func, a_params) for x in perplexity]))
@@ -82,6 +85,8 @@ def pca(data: np.ndarray, output_dimensions: int, args: Namespace = None,
     :return: List of length 1 containing tuple with dimensionally reduced data and description string.
     :rtype: List[Tuple[numpy.ndarray, str]]
     """
+    print("Scaling data.")
+    data = StandardScaler().fit_transform(data)
     model = PCA(n_components=output_dimensions, svd_solver='full')
     x_nd = model.fit_transform(data), "pca"
     if a_func and a_params:

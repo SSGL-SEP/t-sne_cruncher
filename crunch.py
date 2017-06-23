@@ -266,7 +266,7 @@ def collect(data: List[str], x_nd: np.ndarray, metadata: Dict[str, dict], args: 
 
 class ProcessFunctions:
     fingerprint_dict = {"fft": fft_fingerprint, "chroma": chroma_fingerprint,
-                        "ms": ms_fingerprint}
+                        "ms": ms_fingerprint, "mfcc": mfcc_fingerprint}
 
     dimensionality_reduction_dict = {"pca": pca, "tsne": t_sne}
 

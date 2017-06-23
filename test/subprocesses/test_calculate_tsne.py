@@ -25,8 +25,7 @@ class TestCalculateTSNE(TestCase):
         arr = numpy.asarray([1, 2, 3])
         res = t_sne(arr, 2, args)
         self.assertEqual(len(res), 2)
-        mock_t_sne_job.assert_has_calls([call(arr, 30, 2, None, None),
-                                         call(arr, 50, 2, None, None)])
+        self.assertEqual(mock_t_sne_job.call_count, 2)
         self.assertEqual(res[0], (rarr, "30"))
         self.assertEqual(res[1], (rarr, "30"))
 

@@ -77,3 +77,9 @@ def chroma_fingerprint(data: np.ndarray, sr: int, size: int) -> np.ndarray:
     steps = 25
     hop = size//steps
     return librosa.feature.chroma_stft(y=data, sr=sr, hop_length=hop)
+
+
+def mfcc_fingerprint(data: np.ndarray, sr: int, size: int) -> np.ndarray:
+    steps = 25
+    hop = size//steps
+    return librosa.feature.mfcc(data, sr, hop_length=hop, n_mfcc=20)
