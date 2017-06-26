@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import json
-from os.path import splitext, getsize
+from os.path import splitext, getsize, join
 import struct
 from argparse import ArgumentParser
+import ffmpy
 
 
 def _parse_arguments():
@@ -12,6 +13,7 @@ def _parse_arguments():
     parser.add_argument("-e", "--ext", default='mp3')
     parser.add_argument("-i", "--input", default='.', help='Folder path of sound files')
     parser.add_argument("-o", "--output", default='concatenated_sounds.blob', help='Name of output file')
+    parser.add_argument("-c", "--convert", action='store_true', help='Convert to mp3 using ffmpeg')
 
     return parser
 
@@ -29,11 +31,22 @@ def _write_to_file(output_file, file):
         output_file.write(input_file.read())
 
 
+def _convert(input_file_name, output_file_name):
+    ff = ffmpy.FFmpeg(
+        inputs={input_file_name: None},
+        outputs={output_file_name: None}
+    )
+    ff.run()
+
+
 def main(args):
-    with open(args.output, 'wb') as output_file:
+    with open(args.output, 'wb') as blob_output_file:
         for point in _read_points(args.json):
-            file = args.input + '/' + splitext(point[3])[0] + '.' + args.ext
-            _write_to_file(output_file, file)
+            input_file_name = join(args.input, point[3])
+            output_file_name = join(args.input, splitext(point[3])[0] + '.' + args.ext)
+            if args.convert:
+                _convert(input_file_name, output_file_name)
+            _write_to_file(blob_output_file, output_file_name)
 
 
 if __name__ == '__main__':
