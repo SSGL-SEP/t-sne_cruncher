@@ -32,9 +32,11 @@ def _write_to_file(output_file, file):
 
 
 def _convert(input_file_name, output_file_name):
+    print('converting {} to {}'.format(input_file_name, output_file_name))
     ff = ffmpy.FFmpeg(
         inputs={input_file_name: None},
-        outputs={output_file_name: None}
+        outputs={output_file_name: None},
+        global_options="-loglevel warning -y"
     )
     ff.run()
 
