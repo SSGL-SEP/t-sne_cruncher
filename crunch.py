@@ -215,7 +215,7 @@ def output(file_path: str, data: List[str], x_nd: np.ndarray, args: Namespace,
     """
     data_list = collect(data, x_nd, metadata, args, suffix)
     with open(file_path, 'w') as outfile:
-        json.dump(data_list, outfile, indent=4, separators=(',', ':'))
+        json.dump(data_list, outfile)
     print("Wrote data to {}.".format(file_path))
 
 

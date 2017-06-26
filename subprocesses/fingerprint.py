@@ -80,6 +80,17 @@ def chroma_fingerprint(data: np.ndarray, sr: int, size: int) -> np.ndarray:
 
 
 def mfcc_fingerprint(data: np.ndarray, sr: int, size: int) -> np.ndarray:
+    """
+    Generate mel frequency chroma for input sample data.
+    :param data: Input samples
+    :type data: numpy.ndarray
+    :param sr: Sample rate
+    :type sr: int
+    :param size: Sample size
+    :type size: int
+    :return: Fingerprint array
+    :rtype: numpy.ndarray
+    """
     steps = 25
     hop = size//steps
     return librosa.feature.mfcc(data, sr, hop_length=hop, n_mfcc=20)
