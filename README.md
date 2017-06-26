@@ -8,4 +8,6 @@ Typically reads data from .wav files and outputs json data used by [Speech explo
 
 ## Usage
 
+For best results use python 3.6 or newer. Fingerprinting will work on any python 3 system but the tag order in the json file will be undefined and some features in the tests will not work.
+
 Run with `python3 cruncher.py -h` to see help.
