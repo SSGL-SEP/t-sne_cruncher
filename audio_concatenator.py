@@ -5,6 +5,7 @@ from os.path import splitext, getsize, join
 import struct
 from argparse import ArgumentParser
 import ffmpy
+from multiprocessing import Pool
 
 
 def _parse_arguments():
@@ -36,19 +37,19 @@ def _convert(input_file_name, output_file_name):
     ff = ffmpy.FFmpeg(
         inputs={input_file_name: None},
         outputs={output_file_name: None},
-        global_options="-loglevel warning -y"
+        global_options="-loglevel error -y"
     )
     ff.run()
 
 
 def main(args):
+    inputs_and_outputs = [(join(args.input, inpath[3]), join(args.input, '{}.{}'.format(splitext(inpath[3])[0], args.ext))) for inpath in _read_points(args.json)]
+    if args.convert:
+        with Pool() as pool:
+            pool.starmap(_convert, inputs_and_outputs)
     with open(args.output, 'wb') as blob_output_file:
-        for point in _read_points(args.json):
-            input_file_name = join(args.input, point[3])
-            output_file_name = join(args.input, splitext(point[3])[0] + '.' + args.ext)
-            if args.convert:
-                _convert(input_file_name, output_file_name)
-            _write_to_file(blob_output_file, output_file_name)
+        for in_and_out in inputs_and_outputs:
+            _write_to_file(blob_output_file, in_and_out[1])
 
 
 if __name__ == '__main__':
