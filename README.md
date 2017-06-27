@@ -17,4 +17,6 @@ Additionally `audio_concatenator.py` can be used to create mp3 blobs from wav da
 
 ### [audio_concatenator.py usage](docs/audio_concatenator_usage.md)
 
+### [Adding feature extraction algorithms](docs/feature_extraction.md)
+
 ![syllable map](docs/mfcc_syllable_30.png)
