@@ -28,12 +28,16 @@ All of these are defined in the `requirements.txt` and can typically be installe
 
 Additionally for generating the audio mp3 blob using `audio_concatenator.py` the ffmpeg program and python library `ffmpy` are needed. (Typically `pip3 install ffmpy`)
 
-## Usage
+## `Cruncher.py` Usage
 
 Run with `python3.6 cruncher.py -h` to see help on command line.
 
 ### Command line arguments:
 
-#### -f
+#### -f / --input_folder
 
 The folder to read audio files from. The default is to read from the directory where the script is executed. Note that the data will be read recursively.
+
+#### -p / --perplexity
+
+Perplexity / perplexities to use when running dimensionality reduction with t-SNE. List of space-delimited integers.
