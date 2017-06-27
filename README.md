@@ -28,9 +28,36 @@ All of these are defined in the `requirements.txt` and can typically be installe
 
 Additionally for generating the audio mp3 blob using `audio_concatenator.py` the ffmpeg program and python library `ffmpy` are needed. (Typically `pip3 install ffmpy`)
 
-## `Cruncher.py` Usage
+## `Crunch.py` Usage
 
 Run with `python3.6 cruncher.py -h` to see help on command line.
+
+### Example
+
+`python3.6 crunch.py -f phoneme/ -o mfcc_phoneme_.json -t mfcc_phoneme_.png -c phoneme/labels.csv -n phoneme -g mfcc --td --colorby phoneme`
+
+* Read data from the folder `phoneme`
+* Output json to `mfcc_phoneme_30.json` (The "30" is added automatically based on perplexity)
+* Output png plot to `mfcc_phoneme_30.png`
+* Load metadata from `phoneme/labels.csv`
+* Set the dataset name to `phoneme`
+* Run fingerprinting/feature extraction with mfcc
+* Create 2d map
+* Base default coloring on the "phoneme" tag
+
+`python3.6 crunch.py -f nsynth/train/audio -o fft_nsynth_.json -t fft_nsynth_.png -p 50 70 90 200 -a 30000 -c nsynth/labels.csv -n nsynth -g fft --colorby pitch --parallel`
+
+* Read data from the folder `nsynth/train/audio`
+* Output json to `fft_nsynth_50.json`, `fft_nsynth_70.json`, `fft_nsynth_90.json` and `fft_nsynth_200.json`
+* Output png plot to `fft_nsynth_50.png`, `fft_nsynth_70.png`, `fft_nsynth_90.png` and `fft_nsynth_200.png`
+* Run t-SNE with perplexities 50, 70, 90 and 200
+* Load a maximum of 30000 samples from the dataset
+* Load metadata from `nsynth/labels.csv`
+* Set the dataset name to `nsynth`
+* Run fingerprinting/feature extraction with fft
+* Create 3d map. (No `--td` flag present)
+* Base default coloring on the "pitch" tag.
+* Run t-SNE with all perplexities simultaneously. (Hopefully there is at least 32 gigs of idle memory)
 
 ### Command line arguments:
 
