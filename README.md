@@ -61,3 +61,59 @@ The maximum value to use when normalizing coordinate data for json output. The d
 #### -t / --plot_output
 
 File to output pyplot of dimensionality reduction to. The perplexity will be appended to the file name to avoid overwriting. E.g. `plot_.png` will become `plot_30.png` if t-SNE is run with perplexity 30. By default no plot will be output.
+
+#### -c / --collect_metadata
+
+File to load sample metadata from. File format should be csv as defined in [formats.pdf](docs/formats.pdf). Ny default no metadata is collected.
+
+#### -d / --duration
+
+Maximum sample length to load in milliseconds. Longer samples will be truncated. A default value of 0 means that the entire sample will allways be loaded regardles of length.
+
+#### -u / --unfilterables
+
+Space separated list of tags that should be loaded but not added to filter lists.
+
+#### -n / --data_set
+
+Name of the dataset containing the samples.
+
+#### -s / --sound_info
+
+Name of or path to .json file that contains sample data. May or may not be used.
+
+#### -a / --max_to_load
+
+Maximum number of samples to load. Leave as 0 to load all found samples.
+
+#### -b / --tags_to_ignore
+
+Space delimited list of tags not to load while parsing metadata. By default the tags "waveform", "name", "filename" and "file name" are ignored in an attempt to not include the name of the sample as a tag.
+
+#### -k / --reduction_method
+
+Dimension reduction algorithm to use. At the time of writing supported values are "tsne" and "pca". By default dimensionality reduction is done using t-SNE.
+
+#### -g / --fingerprint_method
+
+Algorithm to use for feature extraction. At the time of writing supported values are "fft", "chroma", "ms", "mfcc" with "ms" or "mel spectrum" being the default.
+
+#### -e / --fingerprint_input
+
+Optional parameter for reading fingerprint data from file instead of generating the data at run time. The value should be the name of the file containing the data. Data format is defined by the **--format** parameter.
+
+#### --format
+
+Parameter to specify the file format for fingerprint data. Supported format are "npy", "tsv" and "csv" as defined in [formats.pdf](docs/formats.pdf)
+
+#### --td
+
+Flag to mark that diemnsionality reduction should be done to 2 dimensions instead of 3.
+
+#### --colorby
+
+Name of the tag that default coloration of the map should be based on.
+
+#### --parallel
+
+When running dimensionality reduction with t-SNE, this flag indicates that reductions with different perplexities can be run in parallel. This is not recommended unless the dataset is very limited or the system running the script has loads of idle memory.
