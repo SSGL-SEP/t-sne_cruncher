@@ -23,7 +23,7 @@ def _arg_parse() -> ArgumentParser:
                             help="Folder to read audio files from. Default: current directory.")
     arg_parser.add_argument("-p", "--perplexity", nargs='*', type=int, default=[30],
                             help="Perplexity to use in t-sne crunching. Default: [30].")
-    arg_parser.add_argument("-o", "--output_file", type=str, default=os.path.join(os.getcwd(), 't_sne.json'),
+    arg_parser.add_argument("-o", "--output_file", type=str, default=os.path.join(os.getcwd(), 't_sne_.json'),
                             help="File to output 3d data to. Default: tsv.json in current directory.")
     arg_parser.add_argument("-r", "--fingerprint_output", type=str, default=None,
                             help="'.npy' file to output fingerprint data to. Default: None")
@@ -58,6 +58,8 @@ def _arg_parse() -> ArgumentParser:
                             default="ms", help="Fingerprinting algorithm to use. Default: ms (mel spectrogram).")
     arg_parser.add_argument("-e", "--fingerprint_input", type=str, default=None,
                             help="Read fingerprints form file instead fo generating them. Default: None.")
+    arg_parser.add_argument("--format", type=str, choices=ProcessFunctions.fingerprint_loader, default="npy",
+                            help="Input format for fingerprint input. Default is 'npy' (numpy)")
     arg_parser.add_argument("--td", help="Generates 2d data instead of the default 3d.", action="store_true")
     arg_parser.add_argument("--colorby", type=str, default=None,
                             help="Tag to do default coloring by.")
@@ -153,10 +155,8 @@ def load_fingerprints(args: Namespace) -> Tuple[List[np.ndarray], List[str]]:
     :return: Tuple of a list of fingerprint data and list of paths.
     :rtype: Tuple[List[numpy.ndarray], List[str]]
     """
-    data = np.load(args.fingerprint_input)
-    results = [c[0] for c in data]
-    file_data = [c[1] for c in data]
-    return results, file_data
+
+    return ProcessFunctions.fingerprint_loader[args.format](args.fingerprint_input)
 
 
 def generate_fingerprints(args: Namespace) -> Tuple[List[np.ndarray], List[str]]:
@@ -174,7 +174,7 @@ def generate_fingerprints(args: Namespace) -> Tuple[List[np.ndarray], List[str]]
     if len(results.shape) > 2:
         results = results.reshape(len(results), -1)
     if args.fingerprint_output:
-        np.save(args.fingerprint_output, [(results[i], file_data[i]) for i in range(len(results))])
+        np.save(args.fingerprint_output, [(file_data[i], results[i]) for i in range(len(results))])
         print("Wrote fingerprint data to {}.".format(args.fingerprint_output))
     return results, file_data
 
@@ -265,10 +265,17 @@ def collect(data: List[str], x_nd: np.ndarray, metadata: Dict[str, dict], args: 
 
 
 class ProcessFunctions:
-    fingerprint_dict = {"fft": fft_fingerprint, "chroma": chroma_fingerprint,
-                        "ms": ms_fingerprint, "mfcc": mfcc_fingerprint}
+    fingerprint_dict = {"fft": fft_fingerprint,
+                        "chroma": chroma_fingerprint,
+                        "ms": ms_fingerprint,
+                        "mfcc": mfcc_fingerprint}
 
-    dimensionality_reduction_dict = {"pca": pca, "tsne": t_sne}
+    dimensionality_reduction_dict = {"pca": pca,
+                                     "tsne": t_sne}
+
+    fingerprint_loader = {"npy": load_numpy_fingerprints,
+                          "csv": load_csv_fingerprints,
+                          "tsv": load_tsv_fingerprints}
 
 if __name__ == "__main__":
     main(_arg_parse().parse_args())

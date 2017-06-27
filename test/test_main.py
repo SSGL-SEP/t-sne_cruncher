@@ -20,7 +20,7 @@ class TestMain(TestCase):
         args = ap.parse_args(args=[])
         self.assertEqual(args.input_folder, os.getcwd(), "Unexpected input folder")
         self.assertSequenceEqual(args.perplexity, [30], "Unexpected perplexity list")
-        self.assertEqual(args.output_file, os.path.join(os.getcwd(), "t_sne.json"), "Unexpected output directory")
+        self.assertEqual(args.output_file, os.path.join(os.getcwd(), "t_sne_.json"), "Unexpected output directory")
         self.assertIsNone(args.fingerprint_output, "Unexpected fingerprint output")
         self.assertEqual(args.value_minimum, 0, "Unexpected minimum value")
         self.assertEqual(args.value_maximum, 600, "Unexpected maximum value")

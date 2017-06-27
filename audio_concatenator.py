@@ -43,7 +43,9 @@ def _convert(input_file_name, output_file_name):
 
 
 def main(args):
-    inputs_and_outputs = [(join(args.input, inpath[3]), join(args.input, '{}.{}'.format(splitext(inpath[3])[0], args.ext))) for inpath in _read_points(args.json)]
+    inputs_and_outputs = [(join(args.input, inpath[3]),
+                           join(args.input, '{}.{}'.format(splitext(inpath[3])[0], args.ext)))
+                          for inpath in _read_points(args.json)]
     if args.convert:
         with Pool() as pool:
             pool.starmap(_convert, inputs_and_outputs)
