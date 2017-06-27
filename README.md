@@ -13,7 +13,8 @@ Additionally `audio_concatenator.py` can be used to create mp3 blobs from wav da
 
 ### [Environment](docs/environment.md)
 
-### [Crunch.py usage](docs/crunch_usage.md)
+### [crunch.py usage](docs/crunch_usage.md)
+
+### [audio_concatenator.py usage](docs/audio_concatenator_usage.md)
 
 ![syllable map](docs/mfcc_syllable_30.png)
-
