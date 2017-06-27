@@ -40,4 +40,24 @@ The folder to read audio files from. The default is to read from the directory w
 
 #### -p / --perplexity
 
-Perplexity / perplexities to use when running dimensionality reduction with t-SNE. List of space-delimited integers.
+Perplexity / perplexities to use when running dimensionality reduction with t-SNE. List of space-delimited integers. The default value is 30.
+
+#### -o / --output_file
+
+The file to store json format output to for use with speech_explorer. The default is to store to `t_sne_##.json` to the folder the script is run from, where `##` is the perplexity used.
+
+#### -r / --fingerprint_output
+
+File to store output of feature extraction to. Output is handled by [numpy.save](https://docs.scipy.org/doc/numpy-1.12.0/reference/generated/numpy.save.html). The data is a list of tuples containing file name and a `numpy.ndarray` of values. By default fongerprint data will not be stored.
+
+#### -m / --value_minimum
+
+The minimum value to use when normalizing coordinate data for json output. The default minimum for speech_explorer coordinates is 0.
+
+#### -x / --value_maximum
+
+The maximum value to use when normalizing coordinate data for json output. The default maximum fo speech_explorer coordinates is 600.
+
+#### -t / --plot_output
+
+File to output pyplot of dimensionality reduction to. The perplexity will be appended to the file name to avoid overwriting. E.g. `plot_.png` will become `plot_30.png` if t-SNE is run with perplexity 30. By default no plot will be output.
