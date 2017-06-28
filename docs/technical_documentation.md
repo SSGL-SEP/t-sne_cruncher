@@ -22,6 +22,6 @@ Tests are written with PyUnit.
 
 Tests can be run locally from the project root with `python3.6 -m unittest discover`. Coverage can be collected with `coverage run -m unittest`, provided the coverage package is installed.
 
-If using [pycharm](www.jetbrains.com/PyCharm) tests and coverage can be run using a python test configuration with "Target Path": *project_root/test* and "Working directory": *project_root*.
+If using [pycharm](www.jetbrains.com/PyCharm) tests and coverage can be run using a *python test* configuration with "Target Path": *project_root/test* and "Working directory": *project_root*.
 
 On pushing changes to [github](https://github.com/SSGL-SEP/t-sne_cruncher), [TravisCI](https://travis-ci.org/SSGL-SEP/t-sne_cruncher) automatically runs unit tests and [codeclimate](https://codeclimate.com/github/SSGL-SEP/t-sne_cruncher) does static analysis on the code.
