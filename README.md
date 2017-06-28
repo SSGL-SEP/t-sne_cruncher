@@ -7,7 +7,7 @@ Typically reads data from .wav files and outputs json data used by [Speech explo
 
 Feature extraction from wav files can currently be done with [mfcc](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum), [fft](https://en.wikipedia.org/wiki/Fast_Fourier_transform), [mel-spectrogram](https://en.wikipedia.org/wiki/Mel_scale) or [chroma-stft](https://labrosa.ee.columbia.edu/matlab/chroma-ansyn/).
 
-Dimensionality redcution can be performed in 3d or 2d with either [t-SNE](https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding) or [PCA](https://en.wikipedia.org/wiki/Principal_component_analysis).
+Dimensionality reduction can be performed in 3d or 2d with either [t-SNE](https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding) or [PCA](https://en.wikipedia.org/wiki/Principal_component_analysis).
 
 Additionally `audio_concatenator.py` can be used to create a binary blob from the audio files used in the crunching process. The blob can be used by the [Speech explorer](https://github.com/SSGL-SEP/speech_explorer) to reduce the amount of network calls the application makes.
 
