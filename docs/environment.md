@@ -18,4 +18,8 @@ For best results use python 3.6 or newer. Fingerprinting will work on any python
 
 All of these are defined in the `requirements.txt` and can typically be installed with `pip3 install -r requirements.txt`
 
-Additionally for generating the audio mp3 blob using `audio_concatenator.py` the ffmpeg program and python library `ffmpy` are needed. (Typically `pip3 install ffmpy`)
+### Additionally for `audio_concatenator.py`
+
+The [ffmpeg](https://ffmpeg.org/) program and python library [ffmpy](https://pypi.python.org/pypi/ffmpy) are needed for generating the mp3 blob from wav files. 
+
+(Ffmpeg can be downloaded [here](https://ffmpeg.org/download.html) and  ffmpy can typically be installed with `pip3.6 install ffmpy`)
