@@ -9,7 +9,7 @@ Feature extraction from wav files can currently be done with [mfcc](https://en.w
 
 Dimensionality redcution can be performed in 3d or 2d with either [t-SNE](https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding) or [PCA](https://en.wikipedia.org/wiki/Principal_component_analysis).
 
-Additionally `audio_concatenator.py` can be used to create mp3 blobs from wav datasets for use online.
+Additionally `audio_concatenator.py` can be used to create a binary blob from the audio files used in the crunching process. The blob can be used by the [Speech explorer](https://github.com/SSGL-SEP/speech_explorer) to reduce the amount of network calls the application makes.
 
 ### [Environment](docs/environment.md)
 
