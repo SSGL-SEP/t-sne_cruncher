@@ -4,13 +4,27 @@
 
 ### Project structure
 
-The entry point is `crunch.py` in the project root folder.
+The entry point is [`crunch.py`](../crunch.py) in the project root folder.
 
-The subprocesses folder contains the main processing functions related to data loading, feature extraction and dimensionality reduction.
+The [subprocesses](../subprocesses) folder contains the main processing functions related to data loading, feature extraction and dimensionality reduction.
 
-The utils folder contains miscellaneous functions and data structures that are used elsewhere.
+The [utils](../utils) folder contains miscellaneous functions and data structures that are used elsewhere.
 
-The test folder contains all unit and integration tests. The interal structure of the folder mirrors that of the project itself. I.e. tests for subprocesses are in `tests/subprocesses` and tests for `crunch.py` are in the `tests/` root.
+The test folder contains all unit and integration tests. The interal structure of the folder mirrors that of the project itself. I.e. tests for subprocesses are in [`test/subprocesses`](../test/subprocesses) and tests for [`crunch.py`](../crunch.py) are in the [`test/`](../test) root.
+
+### Feature extraction
+
+All feature extraction functions are in [fingerprint.py](../subprocesses/fingerprint.py). The extractions themselves are done using functions in the lobrosa library.
+
+Extraction is done by mapping input files to fingerprints using a processing pool. As such the process is fairy good at utilizing available processing power and has a fairly sane memory footprint.
+
+### Dimensionality reduction
+
+The two available dimensionality reduction algorithms are t-SNE and PCA. Both are called form the scikit-learn python libraries.
+
+t-SNE can be run with multiple perplexities either in parallell or series. The memory footprint for the algorithms ia fairly large so large scale parallellisation is discouraged unless loads of memory is available. The t-SNE implementation in scikit is not that well parallellizable so running reductions in series will not efficiently utilize processing power available.
+
+PCA is mostly usefull for getting a reductions for data sets that are too large for t-SNE's memory consumption.
 
 ### Coloration
 
