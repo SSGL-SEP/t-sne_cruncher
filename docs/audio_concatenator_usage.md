@@ -14,7 +14,8 @@ audio_concatenator.py [-h] [-e EXT] [-i INPUT] [-o OUTPUT] [-c] json
 The following command processes the json file located in `path/to/cruched/data.json`. It takes the mp3 files from `audio/file/path/` and produces an output file called `concatenated.file`
 
 ```shell
-python3 audio_concatenator -i audio/file/path/ -o concatenated.file -e mp3 path/to/crunched/data.json
+python3 audio_concatenator -i audio/file/path/ 
+-o concatenated.file -e mp3 path/to/crunched/data.json
 ```
 
 ### Input options
