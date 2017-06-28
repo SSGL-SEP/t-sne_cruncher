@@ -14,7 +14,7 @@ The test folder contains all unit and integration tests. The interal structure o
 
 ### Feature extraction
 
-All feature extraction functions are in [fingerprint.py](../subprocesses/fingerprint.py). The extractions themselves are done using functions in the lobrosa library.
+All feature extraction functions are in [fingerprint.py](../subprocesses/fingerprint.py). The extractions themselves are done using functions in the librosa library.
 
 Extraction is done by mapping input files to fingerprints using a processing pool. As such the process is fairy good at utilizing available processing power and has a fairly sane memory footprint.
 
