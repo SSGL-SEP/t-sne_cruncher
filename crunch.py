@@ -155,7 +155,6 @@ def load_fingerprints(args: Namespace) -> Tuple[List[np.ndarray], List[str]]:
     :return: Tuple of a list of fingerprint data and list of paths.
     :rtype: Tuple[List[numpy.ndarray], List[str]]
     """
-
     return ProcessFunctions.fingerprint_loader[args.format](args.fingerprint_input)
 
 

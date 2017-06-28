@@ -170,6 +170,8 @@ class UnionFind:
         :return: Root of set that item is in.
         :rtype: T
         """
+        if item not in self.parents:
+            raise ValueError("{} not present in union find structure".format(item))
         child = item
         item = self.parents[item]
         while item != child:

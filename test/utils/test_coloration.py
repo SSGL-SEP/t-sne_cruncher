@@ -111,3 +111,10 @@ class TestAddColor(TestCase):
         self.assertGreaterEqual(e1, e2)
         self.assertLessEqual(e1, e3)
         self.assertLessEqual(e1, e2)
+
+    def test_random_assign(self):
+        cd = ColorData(10000, 0)
+        self.assertTrue(cd.random_assign)
+        self.assertEqual(len(cd.colors), 1528)
+        self.assertEqual(cd.assign(), "#00e7ff")
+        self.assertEqual(cd.assign_distant("#00e7ff"), "#ff1800")

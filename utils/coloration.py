@@ -1,6 +1,6 @@
 import colorsys
 from math import sqrt
-from random import choice
+from random import choice, seed
 from typing import Tuple, List, TypeVar, Any, Dict
 
 import numpy
@@ -57,12 +57,13 @@ class Edge:
 
 
 class ColorData:
-    def __init__(self, max_value: int):
+    def __init__(self, max_value: int, init_seed: int = None):
         """
         Create instance of ColorData
         :param max_value: Number of colors needed.
         :type max_value: int
         """
+        seed(init_seed)
         self.start_index = 0
         self.assigned = 0
         self.colors = [_get_color(i, max_value) for i in range(max_value)]
