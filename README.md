@@ -15,6 +15,8 @@ Additionally `audio_concatenator.py` can be used to create a binary blob from th
 
 ### [crunch.py usage](docs/crunch_usage.md)
 
+### [crunch.py technical documentation](docs/technical_documentation.md)
+
 ### [audio_concatenator.py usage](docs/audio_concatenator_usage.md)
 
 ### [Adding feature extraction algorithms](docs/feature_extraction.md)
