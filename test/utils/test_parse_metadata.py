@@ -1,6 +1,6 @@
 from unittest import mock, TestCase
 
-from utils import *
+from utils.utils import parse_metadata, _parse_row
 from crunch import _arg_parse
 
 
@@ -28,3 +28,21 @@ class TestParseMetadata(TestCase):
                 self.assertTrue("y" in d["c"], "'y' not in 'c'")
                 self.assertEqual(d["c"]["y"]["points"], [0], "Invalid point list for 'c'")
                 self.assertTrue("points" in d["c"]["y"], "'points' not in 'c'.'y'")
+
+    def test_parse_row(self):
+        i_d = {"file1": 1, "file2": 2}
+        h = ["name", "phoneme"]
+        d = {"phoneme": {"__filterable": True}}
+        ig = ["name"]
+        _parse_row(d, h, ["file3", "a"], i_d, ig)
+        self.assertTrue("a" not in d["phoneme"])
+        _parse_row(d, h, ["file1", 'a'], i_d, ig)
+        self.assertTrue("a" in d["phoneme"])
+        self.assertTrue("points" in d["phoneme"]['a'])
+        self.assertSequenceEqual(d["phoneme"]['a']["points"], [1])
+        _parse_row(d, h, ["file2", 'a'], i_d, ig)
+        self.assertTrue("a" in d["phoneme"])
+        self.assertTrue("points" in d["phoneme"]['a'])
+        self.assertSequenceEqual(d["phoneme"]['a']["points"], [1, 2])
+        self.assertEqual(len(d.keys()), 1)
+        self.assertEqual(len(d["phoneme"].keys()), 2)

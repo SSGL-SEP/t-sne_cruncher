@@ -95,7 +95,8 @@ def parse_metadata(args: Namespace, index_dict: Dict[str, int]) -> Dict[str, dic
     return d
 
 
-def _parse_row(d: Dict[str, Any], h: List[str], row: List[str], index_dict: Dict[str, int], ignorables: List[str]) -> None:
+def _parse_row(d: Dict[str, Any], h: List[str], row: List[str], index_dict: Dict[str, int],
+               ignorables: List[str]) -> None:
     """
     Add csv row data to dictionary.
 

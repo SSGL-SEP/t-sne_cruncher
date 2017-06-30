@@ -47,7 +47,7 @@ class TestCalculateTSNE(TestCase):
         arr = numpy.asarray([1, 2, 3])
         params = (4, 5)
         res = _t_sne_job(arr, 30, 2, mock_func, params)
-        mock_sci_tsne.assert_called_with(method='exact', n_components=2, perplexity=30, verbose=2)
+        mock_sci_tsne.assert_called_with(learning_rate=50, method='exact', n_components=2, perplexity=30, verbose=2)
         self.assertEqual(mock_func.call_args[0][0][1], "30")
         self.assertEqual(mock_func.call_args[0][1], 4)
         self.assertEqual(mock_func.call_args[0][2], 5)

@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import numpy
 
-from utils.coloration import add_color, ColorData, Edge
+from utils.coloration import add_color, ColorData, Edge, select_colors
 
 
 def generate_data():
@@ -118,3 +118,33 @@ class TestAddColor(TestCase):
         self.assertEqual(len(cd.colors), 1528)
         self.assertEqual(cd.assign(), "#00e7ff")
         self.assertEqual(cd.assign_distant("#00e7ff"), "#ff1800")
+
+    def test_select_colors(self):
+        cd = ColorData(20)
+        d = generate_data()["phoneme"]
+        e1 = Edge('a', numpy.asarray([1, 1]), 'b', numpy.asarray([1, 2]))
+        select_colors(e1, cd, d)
+        self.assertTrue("color" in d['a'])
+        self.assertTrue("color" in d['b'])
+        self.assertTrue("color" not in d['c'])
+        select_colors(e1, cd, d)
+        self.assertTrue("color" in d['a'])
+        self.assertTrue("color" in d['b'])
+        self.assertTrue("color" not in d['c'])
+        e2 = Edge('a', numpy.asarray([1, 1]), 'c', numpy.asarray([2, 1]))
+        select_colors(e2, cd, d)
+        self.assertTrue("color" in d['a'])
+        self.assertTrue("color" in d['b'])
+        self.assertTrue("color" in d['c'])
+
+    def test_color_data_string(self):
+        cd = ColorData(10)
+        print(cd)
+        self.assertEqual(str(cd), """Current index: 0. Colors assigned: 0. Total colors 10.
+        Colors: ['#ff0000', '#ff9900', '#cbff00', '#33ff00', '#00ff66', '#00ffff', '#0066ff', '#3200ff', '#cc00ff', \
+'#ff0098']
+        Usages: {'#ff0000': True, '#ff9900': True, '#cbff00': True, '#33ff00': True, '#00ff66': True, '#00ffff': True, \
+'#0066ff': True, '#3200ff': True, '#cc00ff': True, '#ff0098': True}
+        Indexes: {'#ff0000': 0, '#ff9900': 1, '#cbff00': 2, '#33ff00': 3, '#00ff66': 4, '#00ffff': 5, '#0066ff': 6, \
+'#3200ff': 7, '#cc00ff': 8, '#ff0098': 9}"""
+                         )

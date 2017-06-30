@@ -61,7 +61,7 @@ def _t_sne_job(data: np.ndarray, perplexity: int, no_dims: int,
     :rtype: Tuple[numpy.ndarray, str]
     """
     print("Running t-SNE with perplexity {}".format(perplexity))
-    model = TSNE(n_components=no_dims, perplexity=perplexity, method='exact', verbose=2)
+    model = TSNE(n_components=no_dims, perplexity=perplexity, method='exact', verbose=2, learning_rate=50)
     x_nd = model.fit_transform(data), str(perplexity)
     if a_func and a_params:
         a_func(x_nd, *a_params)
