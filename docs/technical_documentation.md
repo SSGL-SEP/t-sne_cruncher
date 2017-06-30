@@ -14,17 +14,17 @@ The test folder contains all unit and integration tests. The interal structure o
 
 ### Feature extraction
 
-All feature extraction functions are in [fingerprint.py](../subprocesses/fingerprint.py). The extractions themselves are done using functions in the lobrosa library.
+All feature extraction functions are in [fingerprint.py](../subprocesses/fingerprint.py). The extractions themselves are done using functions in the librosa library.
 
 Extraction is done by mapping input files to fingerprints using a processing pool. As such the process is fairy good at utilizing available processing power and has a fairly sane memory footprint.
 
 ### Dimensionality reduction
 
-The two available dimensionality reduction algorithms are t-SNE and PCA. Both are called form the scikit-learn python libraries.
+The two available dimensionality reduction algorithms are t-SNE and PCA. Both are called from the scikit-learn python libraries.
 
-t-SNE can be run with multiple perplexities either in parallell or series. The memory footprint for the algorithms ia fairly large so large scale parallellisation is discouraged unless loads of memory is available. The t-SNE implementation in scikit is not that well parallellizable so running reductions in series will not efficiently utilize processing power available.
+t-SNE can be run with multiple perplexities either in parallel or series. The memory footprint for the algorithms is fairly large so large scale parallelization is discouraged unless loads of memory is available. The t-SNE implementation in scikit is not that well parallelizable so running reductions in series will not efficiently utilize processing power available.
 
-PCA is mostly usefull for getting a reductions for data sets that are too large for t-SNE's memory consumption.
+PCA is mostly useful for getting a reductions for data sets that are too large for t-SNE's memory consumption.
 
 ### Coloration
 

@@ -1,6 +1,6 @@
 # Adding feature extraction algorithms
 
-New feature extraction algorithms can be added to the crunher. All that is needed is needed is a function with the correct call signature and for the function to be added to the `fingerprint_dict` in crunch.py.
+New feature extraction algorithms can be added to the cruncher. All that is needed is a function with the correct call signature and for the function to be added to the `fingerprint_dict` in crunch.py.
 
 The call signature of feature extraction functions should be `f(numpy.ndarray, int, int) -> numpy.ndarray`. Where the input array is the waveform data, the first integer is sample rate and the secont integer is sample length. The return type should be a numpy.ndarray that allways has the same shape.
 

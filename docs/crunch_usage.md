@@ -61,11 +61,11 @@ File to output pyplot of dimensionality reduction to. The perplexity will be app
 
 #### -c / --collect_metadata
 
-File to load sample metadata from. File format should be csv as defined in [formats.pdf](docs/formats.pdf). Ny default no metadata is collected.
+File to load sample metadata from. File format should be csv as defined in [formats.pdf](docs/formats.pdf). By default no metadata is collected.
 
 #### -d / --duration
 
-Maximum sample length to load in milliseconds. Longer samples will be truncated. A default value of 0 means that the entire sample will allways be loaded regardles of length.
+Maximum sample length to load in milliseconds. Longer samples will be truncated. A default value of 0 means that the entire sample will always be loaded regardless of length.
 
 #### -u / --unfilterables
 
@@ -105,7 +105,7 @@ Parameter to specify the file format for fingerprint data. Supported format are 
 
 #### --td
 
-Flag to mark that diemnsionality reduction should be done to 2 dimensions instead of 3.
+Flag to mark that dimensionality reduction should be done to 2 dimensions instead of 3.
 
 #### --colorby
 
